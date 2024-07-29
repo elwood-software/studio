@@ -32,6 +32,7 @@ export * as base64 from "@std/encoding/base64";
 export * as supabase from "@supabase/supabase-js";
 export * as jwt from "jsonwebtoken";
 export * as xml from "@libs/xml";
+export * as _ from "underscore";
 
 export type {
   ElwoodDatabase,

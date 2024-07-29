@@ -1,6 +1,6 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { parseFeed } from "jsr:@mikaelporttila/rss@*";
-import { sdk } from "https://x.elwood.run/a/sdk@latest.ts";
+import { NodeTypes } from "jsr:@elwood/db@0.0.10";
 
 if (import.meta.main) {
   main();
@@ -31,6 +31,7 @@ export default async function main() {
     const { id } = entry;
     const entry_ = entry as Record<string, any>;
 
+    // EPISODE
     const { data, error } = await client.rpc("elwood_create_node", {
       p_node: {
         name: id,
@@ -44,6 +45,7 @@ export default async function main() {
 
     console.log("data", data?.id, error?.message);
 
+    // EPISODE CONTENT
     const content = await client.rpc("elwood_create_node", {
       p_node: {
         name: `${id}:content`,
@@ -69,13 +71,30 @@ export default async function main() {
 
     console.log("content", content.data?.id, content.error);
 
+    // public episode symlink
+    const publicEpisode = await client.rpc("elwood_create_node", {
+      p_node: {
+        name: `${id}:feed:episode:public`,
+        type: NodeTypes.Symlink,
+        parent_id: "f8f5d6cd-d32f-4dd7-b06a-a3b15c20520f",
+        category: "EPISODE",
+        sub_category: "PUBLIC",
+        data: {
+          target_node_id: data.data?.id,
+        },
+        status: "ACTIVE",
+      },
+    });
+
+    // public audio
     const audio = await client.rpc("elwood_create_node", {
       p_node: {
-        name: `${id}:content:audio`,
+        name: `${id}:content:audio:public`,
         type: "BLOB",
         parent_id: data.id,
         category: "AUDIO",
         sub_category: "FULL",
+        other_categories: ["FREE"],
         data: {
           type: "external",
           attachments: entry.attachments ?? [],

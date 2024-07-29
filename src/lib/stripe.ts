@@ -1,4 +1,11 @@
-import { assert, Stripe } from "../_deps.ts";
+import { assert, Stripe } from "@/_deps.ts";
+import { defaultInstanceId } from "@/constants.ts";
+
+export function getStripeWebhookSecret(): string {
+  const secret = Deno.env.get("STRIPE_WEBHOOK_ENDPOINT_SECRET");
+  assert(secret, "STRIPE_WEBHOOK_ENDPOINT_SECRET missing");
+  return secret;
+}
 
 /**
  * create a stripe instance tied to stripe secret
@@ -23,7 +30,7 @@ export function createStripe(
  * @returns
  */
 export async function getStripeAccountId(
-  instanceId: string = "00000000-0000-0000-0000-000000000000",
+  instanceId: string = defaultInstanceId,
 ): Promise<string> {
   const envVar = Deno.env.get("STRIPE_ACCOUNT_ID");
   const cloudApiUrl = Deno.env.get("ELWOOD_CLOUD_API_URL") ??

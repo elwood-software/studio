@@ -53,8 +53,28 @@ export function connectDatabase(
     },
   });
 
+  const genericConnection = new Kysely({
+    dialect: {
+      createAdapter() {
+        return new PostgresAdapter();
+      },
+      createDriver() {
+        return new PostgresDriver({ pool });
+      },
+      createIntrospector(db: Kysely<unknown>) {
+        return new PostgresIntrospector(db);
+      },
+      createQueryCompiler() {
+        return new PostgresQueryCompiler();
+      },
+    },
+  });
+
   return {
     pool,
+    generic<T>() {
+      return genericConnection as Kysely<T>;
+    },
     elwood: {
       query: elwoodConnection.withSchema("elwood"),
       connection: elwoodConnection,

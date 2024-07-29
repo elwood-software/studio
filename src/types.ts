@@ -4,6 +4,8 @@ import type {
   ElwoodQueryCreator,
   Input,
   JwtVariables,
+  Kysely,
+  Next,
   Pool,
   PublicDatabase,
   PublicQueryCreator,
@@ -26,10 +28,15 @@ export type HandlerContext<
   S
 >;
 
+export type { Next };
+
 export type * from "@elwood/db/types";
 
 export type ConnectDatabaseResult = {
   pool: Pool;
+  // TK: at some point we should have a fully typed Database
+  // but for now we'll use generic for the sake of simplicity
+  generic<T>(): Kysely<T>;
   elwood: {
     query: ElwoodQueryCreator;
     connection: ElwoodDatabase;

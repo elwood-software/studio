@@ -1,5 +1,30 @@
-import { jwt, sql, xml } from "../_deps.ts";
-import type { HandlerContextVariables, JsonObject, Node } from "../types.ts";
+import { jwt, sql, xml } from "@/_deps.ts";
+import type {
+  HandlerContextVariables,
+  JsonObject,
+  Node,
+  StudioContent,
+  StudioNode,
+} from "@/types.ts";
+
+/*
+ HOW FEEDS WORK
+ ----------------
+  01000 | NETWORK
+  02000 ├─ SHOW
+  02100 |   ├─ CONTENT
+  02200 |   ├─ EPISODE
+  02210 |   |   ├─ CONTENT
+  02211 |   |   ├─ AUDIO/FREE
+  02412 |   |   ├─ AUDIO/PAID
+  02300 |   ├─ FEED:FREE (shows public feed, proxied from rss)
+  02310 |   |   ├─ EPISODE [symlink to #02200]
+  02400 |   ├─ FEED:PAID (show paid feed, uploaded by team)
+  02410 |       ├─ EPISODE [symlink to #02200]
+  02420 |       ├─ FEED:PAID:USER (user feed)
+  02421 |           ├─POST (custom user content)
+
+*/
 
 export type CreateInput = {
   node_id: string;
@@ -40,6 +65,8 @@ export async function create(
   }
 
   const feed = await db.query.insertInto("node").values({
+    type: "BLOB",
+    updated_at: new Date(),
     instance_id: sql<string>`elwood.current_instance_id()`,
     name: ["subscription", input.node_id, input.subscription_id].join(":"),
     category_id: sql<string>`elwood.node_category_id('FEED')`,
@@ -80,7 +107,7 @@ export async function listEntitledFeedsBySubscription(
     .where("id", "=", input.subscription_id)
     .executeTakeFirstOrThrow();
 
-  const node = await ctx.db.public.query.selectFrom("elwood_studio_node")
+  const node = await ctx.db.public.query.selectFrom("studio_node")
     .selectAll()
     .where(
       "id",
@@ -107,7 +134,7 @@ export async function listEntitledFeedsBySubscription(
 }
 
 export type CompileRssInput = {
-  id: string;
+  feed: StudioNode;
 };
 
 export type CompileRssResult = {
@@ -118,36 +145,56 @@ export async function compileRss(
   ctx: HandlerContextVariables,
   input: CompileRssInput,
 ): Promise<CompileRssResult> {
-  const query = ctx.db.public.query;
+  const query = ctx.db.elwood.query;
+  const pQuery = ctx.db.public.query;
+  const { feed } = input;
 
-  const feed = await query.selectFrom(
-    "elwood_studio_node",
-  )
-    .selectAll()
-    .where("id", "=", input.id)
-    .executeTakeFirstOrThrow();
+  // it is possible that the feed is a child of a feed
+  // in which case we'll need the grandparent to get the show content
+  const [show, parentFeedId] = await getFeedShow(ctx, feed);
 
-  const show = await query.selectFrom("elwood_studio_node").selectAll()
-    .where(
-      "id",
-      "=",
-      feed.parent_id,
-    )
-    .executeTakeFirstOrThrow();
+  const allItems: StudioNode[] = [];
 
-  const items = (await sql<
-    {
-      title: string;
-      description: string;
-      audio_id: string | null;
-      video_id: string | null;
-      content: JsonObject;
-    }
-  >`SELECT * FROM public.elwood_studio_feed_items(${feed.id})`
-    .execute(
-      ctx.db.public.connection,
-    )).rows;
+  // get akk the items in the parent feed
+  allItems.push(
+    ...await query.selectFrom("studio_node")
+      .selectAll()
+      .where("parent_id", "=", feed.id)
+      .where((eb) => eb("category", "=", sql<string>`ANY(ARRAY['EPISODE'])`))
+      .execute(),
+  );
 
+  // if there is a parent feed
+  // grab all of the items from that feed
+  if (parentFeedId !== feed.id) {
+    allItems.push(
+      ...await query.selectFrom("studio_node")
+        .selectAll()
+        .where("parent_id", "=", parentFeedId)
+        .where((eb) => eb("category", "=", sql<string>`ANY(ARRAY['EPISODE'])`))
+        .execute(),
+    );
+  }
+
+  const mappedItems = await Promise.all(
+    allItems.map(async (item) => {
+      return await rssItemForEpisode(ctx, item);
+    }),
+  );
+
+  return {
+    rss: {
+      channel: await rssChannelFromShow(ctx, show, feed),
+      item: mappedItems,
+    },
+  };
+}
+
+export async function rssChannelFromShow(
+  ctx: HandlerContextVariables,
+  show: StudioContent,
+  feed: StudioNode,
+): Promise<JsonObject> {
   const showName = show.name;
   const showDomain = show.content.domain ?? showName;
   const showHostname = showDomain.includes(".")
@@ -155,77 +202,113 @@ export async function compileRss(
     : `${showDomain}.elwood.studio`;
   const showLink = `https://${showHostname}`;
 
-  const item = [];
+  return {
+    "atom:link": {
+      "@href": `https://${showHostname}/feed/${feed.id}`,
+    },
+    title: show.content.title,
+    link: showLink,
+    language: "en",
+    pubDate: new Date().toUTCString(),
+    lastBuildDate: new Date().toUTCString(),
+    webMaster: "feed@elwood.studio",
+    description: xml.cdata(show.content.description),
+    image: {
+      url: show.content.image_url,
+      link: showLink,
+      title: show.content.image_title,
+    },
+    "itunes:author": show.content.author,
+    "itunes:explicit": show.content.explicit ? "yes" : "no",
+    "itunes:image": {
+      "@href": show.content.image_url,
+    },
+    "itunes:owner": {
+      "itunes:name": show.content.author_name,
+      "itunes:email": show.content.author_email ??
+        `${show.name}@${showHostname}`,
+    },
+    "itunes:block": "Yes",
+    "itunes:type": "episodic",
+  };
+}
 
-  for (const episode of (items ?? [])) {
-    // if there's no audio id, we should skip
-    if (episode.audio_id === null) {
-      continue;
-    }
+export async function rssItemForEpisode(
+  ctx: HandlerContextVariables,
+  node: StudioNode,
+): Promise<JsonObject> {
+  // find audio for this
 
-    const license = jwt.sign({
-      n: [feed.id, episode.audio_id],
-    }, "secret");
+  console.log(node.id);
 
-    item.push({
-      title: episode.title,
-      description: xml.cdata(episode.description),
-      enclosure: {
-        "@url": `https://${showHostname}/play/${license}`,
-        "@length": "",
-        "@type": "audio/mpeg",
-      },
-      guid: {
-        "#text": episode.content.guid,
-        "@isPermaLink": "false",
-      },
-      "content:encoded": xml.cdata(
-        episode.content.content ?? episode.content.description,
-      ),
-      pubDate: episode.content.pubDate,
-      "itunes:author": "Elwood Studio",
-      "itunes:image": {
-        "@href":
-          "https://supercast-storage-assets.b-cdn.net/channel/802/artwork/large-1fa35c4198e605c4e63ed035b9950d2d.png",
-      },
-      "itunes:explicit": "no",
-      "itunes:duration": episode.content.duration,
-      "itunes:episodeType": "full",
-    });
-  }
+  return {};
+
+  const license = jwt.sign({
+    n: [feed.id, episode.audio_id],
+  }, "secret");
 
   return {
-    rss: {
-      channel: {
-        "atom:link": {
-          "@href": `https://${showHostname}/feed/${feed.id}`,
-        },
-        title: show.content.title,
-        link: showLink,
-        language: "en",
-        pubDate: new Date().toUTCString(),
-        lastBuildDate: new Date().toUTCString(),
-        webMaster: "feed@elwood.studio",
-        description: xml.cdata(show.content.description),
-        image: {
-          url: show.content.image_url,
-          link: showLink,
-          title: show.content.image_title,
-        },
-        "itunes:author": show.content.author,
-        "itunes:explicit": show.content.explicit ? "yes" : "no",
-        "itunes:image": {
-          "@href": show.content.image_url,
-        },
-        "itunes:owner": {
-          "itunes:name": show.content.author_name,
-          "itunes:email": show.content.author_email ??
-            `${show.name}@${showHostname}`,
-        },
-        "itunes:block": "Yes",
-        "itunes:type": "episodic",
-      },
-      item,
+    title: episode.title,
+    description: xml.cdata(episode.description),
+    enclosure: {
+      "@url": `https://${showHostname}/play/${license}`,
+      "@length": "",
+      "@type": "audio/mpeg",
     },
+    guid: {
+      "#text": episode.content.guid,
+      "@isPermaLink": "false",
+    },
+    "content:encoded": xml.cdata(
+      episode.content.content ?? episode.content.description,
+    ),
+    pubDate: episode.content.pubDate,
+    "itunes:author": "Elwood Studio",
+    "itunes:image": {
+      "@href":
+        "https://supercast-storage-assets.b-cdn.net/channel/802/artwork/large-1fa35c4198e605c4e63ed035b9950d2d.png",
+    },
+    "itunes:explicit": "no",
+    "itunes:duration": episode.content.duration,
+    "itunes:episodeType": "full",
   };
+}
+
+export async function getFeedShow(
+  ctx: HandlerContextVariables,
+  feed: StudioNode,
+): Promise<[StudioContent, string]> {
+  // this is the feeds parent
+  // it could be category = 'FEED' or 'SHOW'
+  const parent = await ctx.db.public.query.selectFrom("elwood_studio_content")
+    .selectAll()
+    .where("id", "=", feed.parent_id)
+    .executeTakeFirstOrThrow();
+
+  let show = parent;
+  let showFeedId = feed.id;
+
+  // if the parent category is a feed
+  // this means we need to inherit from the parents content
+  // and go up one level for the show
+  if (parent.category === "FEED") {
+    const grandparent = await ctx.db.public.query.selectFrom(
+      "elwood_studio_content",
+    )
+      .selectAll()
+      .where(
+        "id",
+        "=",
+        parent.parent_id,
+      )
+      .executeTakeFirstOrThrow();
+
+    showFeedId = parent.id;
+    show = grandparent;
+  }
+
+  return [
+    show,
+    showFeedId,
+  ];
 }

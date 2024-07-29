@@ -3,7 +3,8 @@
   "packages": {
     "specifiers": {
       "jsr:@elwood/db": "jsr:@elwood/db@0.0.1",
-      "jsr:@elwood/db@^0.0.5": "jsr:@elwood/db@0.0.5",
+      "jsr:@elwood/db@0.0.10": "jsr:@elwood/db@0.0.10",
+      "jsr:@elwood/db@^0.0.11": "jsr:@elwood/db@0.0.11",
       "jsr:@libs/typing@2": "jsr:@libs/typing@2.8.0",
       "jsr:@libs/xml": "jsr:@libs/xml@5.4.12",
       "jsr:@libs/xml@^5.4.12": "jsr:@libs/xml@5.4.12",
@@ -44,7 +45,7 @@
       "jsr:@std/path@1.0.0-rc.1": "jsr:@std/path@1.0.0-rc.1",
       "jsr:@std/yaml": "jsr:@std/yaml@1.0.0",
       "jsr:@std/yaml@^1.0.0": "jsr:@std/yaml@1.0.0",
-      "jsr:@supabase/supabase-js@2": "jsr:@supabase/supabase-js@2.44.4",
+      "jsr:@supabase/supabase-js@2": "jsr:@supabase/supabase-js@2.45.0",
       "jsr:@supabase/supabase-js@^2.44.4": "jsr:@supabase/supabase-js@2.44.4",
       "npm:@hono/zod-validator": "npm:@hono/zod-validator@0.2.2_hono@4.5.2_zod@3.23.8",
       "npm:@hono/zod-validator@^0.2.2": "npm:@hono/zod-validator@0.2.2_hono@4.5.2_zod@3.23.8",
@@ -55,6 +56,7 @@
       "npm:@supabase/realtime-js@2.10.2": "npm:@supabase/realtime-js@2.10.2",
       "npm:@supabase/storage-js@2.6.0": "npm:@supabase/storage-js@2.6.0",
       "npm:@types/node": "npm:@types/node@18.16.19",
+      "npm:create-next-app": "npm:create-next-app@14.2.5",
       "npm:hono": "npm:hono@4.5.2",
       "npm:hono@^4.5.2": "npm:hono@4.5.2",
       "npm:jsonwebtoken": "npm:jsonwebtoken@9.0.2",
@@ -65,6 +67,7 @@
       "npm:stripe@13.5.0": "npm:stripe@13.5.0",
       "npm:stripe@14.12.0": "npm:stripe@14.12.0",
       "npm:stripe@^16.5.0": "npm:stripe@16.5.0",
+      "npm:underscore@^1.13.7": "npm:underscore@1.13.7",
       "npm:zod": "npm:zod@3.23.8",
       "npm:zod@^3.23.8": "npm:zod@3.23.8"
     },
@@ -75,10 +78,13 @@
           "npm:kysely@0.27.4"
         ]
       },
-      "@elwood/db@0.0.5": {
-        "integrity": "697f35cbdc772374bd76c8ad66f01fff1c277a7a17a744c5fb69ee2e73445267",
+      "@elwood/db@0.0.10": {
+        "integrity": "e304cce0a68670beb2782a8253442110fd50b01a51149db15ea9c01732a9b4cc"
+      },
+      "@elwood/db@0.0.11": {
+        "integrity": "c1dee9a806e245e0e8b787ddd9e5245f1973c8f3bb05ab4fa994a80b4646c5bd",
         "dependencies": [
-          "npm:kysely@0.27.4"
+          "npm:kysely@^0.27.4"
         ]
       },
       "@libs/typing@2.8.0": {
@@ -249,6 +255,17 @@
           "npm:@supabase/realtime-js@2.10.2",
           "npm:@supabase/storage-js@2.6.0"
         ]
+      },
+      "@supabase/supabase-js@2.45.0": {
+        "integrity": "f6a0f1cbd18e36a52b5185c56f7afd6014124554fff2885fb8de0dd3cd3904b3",
+        "dependencies": [
+          "npm:@supabase/auth-js@2.64.4",
+          "npm:@supabase/functions-js@2.4.1",
+          "npm:@supabase/node-fetch@2.6.15",
+          "npm:@supabase/postgrest-js@1.15.8",
+          "npm:@supabase/realtime-js@2.10.2",
+          "npm:@supabase/storage-js@2.6.0"
+        ]
       }
     },
     "npm": {
@@ -325,6 +342,10 @@
           "get-intrinsic": "get-intrinsic@1.2.4",
           "set-function-length": "set-function-length@1.2.2"
         }
+      },
+      "create-next-app@14.2.5": {
+        "integrity": "sha512-lw4iH8wCflQ2O9eX2+1m2hpDkgVKj0Pm0qCZHetZy9NSizzvEiGAzuyEVOUo8YxlQBQKVW9Ope7ri6tE18yS3w==",
+        "dependencies": {}
       },
       "define-data-property@1.1.4": {
         "integrity": "sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==",
@@ -527,6 +548,10 @@
         "integrity": "sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==",
         "dependencies": {}
       },
+      "underscore@1.13.7": {
+        "integrity": "sha512-GMXzWtsc57XAtguZgaQViUOzs0KTkk8ojr3/xAxXLITqf/3EMwxC0inyETfDFjH/Krbhuep0HNbbjI9i/q3F3g==",
+        "dependencies": {}
+      },
       "webidl-conversions@3.0.1": {
         "integrity": "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==",
         "dependencies": {}
@@ -637,7 +662,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@elwood/db@^0.0.5",
+      "jsr:@elwood/db@^0.0.11",
       "jsr:@elwood/run@^0.1.0",
       "jsr:@libs/xml@^5.4.12",
       "jsr:@mikaelporttila/rss@^1.1.1",
@@ -650,6 +675,7 @@
       "npm:jsonwebtoken@^9.0.2",
       "npm:kysely@^0.27.4",
       "npm:stripe@^16.5.0",
+      "npm:underscore@^1.13.7",
       "npm:zod@^3.23.8"
     ]
   }

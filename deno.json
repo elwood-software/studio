@@ -3,7 +3,8 @@
     "dev": "deno run -A --watch --env=.env src/serve.ts"
   },
   "imports": {
-    "@elwood/db": "jsr:@elwood/db@^0.0.5",
+    "@/": "./src/",
+    "@elwood/db": "jsr:@elwood/db@^0.0.11",
     "@elwood/run": "jsr:@elwood/run@^0.1.0",
     "@hono/zod-validator": "npm:@hono/zod-validator@^0.2.2",
     "@libs/xml": "jsr:@libs/xml@^5.4.12",
@@ -16,12 +17,14 @@
     "jsonwebtoken": "npm:jsonwebtoken@^9.0.2",
     "kysely": "npm:kysely@^0.27.4",
     "stripe": "npm:stripe@^16.5.0",
+    "underscore": "npm:underscore@^1.13.7",
     "zod": "npm:zod@^3.23.8"
   },
+  "exclude": [
+    "**/node_modules",
+    "templates/**"
+  ],
   "deploy": {
-    "exclude": [
-      "**/node_modules"
-    ],
     "include": [],
     "entrypoint": "src/serve.ts"
   }

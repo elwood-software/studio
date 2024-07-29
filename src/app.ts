@@ -1,12 +1,17 @@
-import { assert, Hono, honoJwt, type Next, zValidator } from "./_deps.ts";
-import { HandlerContextVariables } from "./types.ts";
-import { connectDatabase } from "./lib/connect-database.ts";
-import { isRole } from "./lib/is-role.ts";
-import { createStripe } from "./lib/stripe.ts";
+import { assert, Hono, honoJwt, type Next, z, zValidator } from "@/_deps.ts";
+import { HandlerContextVariables } from "@/types.ts";
+import { connectDatabase } from "@/lib/connect-database.ts";
+import { isAuthenticated, isRole } from "@/lib/is-role.ts";
+import { createStripe } from "@/lib/stripe.ts";
 
-import * as feedHandler from "./handler/feed.ts";
-import * as createSubscribeHandler from "./handler/subscription/create.ts";
-import * as createCustomerHandler from "./handler/customer/create.ts";
+import * as viewFeedHandler from "@/handler/feed/view.ts";
+import * as createSubscribeHandler from "@/handler/subscription/create.ts";
+import * as createCustomerHandler from "@/handler/customer/create.ts";
+import * as updateSubscriptionFeedsHandler from "@/handler/subscription/update-feeds.ts";
+import * as afterCustomerHandler from "@/handler/customer/after.ts";
+import * as inboundWebhookHandler from "@/handler/webhook/inbound.ts";
+import * as processWebhookHandler from "@/handler/webhook/process.ts";
+import { Roles } from "@/constants.ts";
 
 // deno-lint-ignore require-await
 export async function createApp() {
@@ -44,42 +49,82 @@ export async function createApp() {
     );
   });
 
+  // check the jwt only if one is provided
+  // the isRole middleware will check if the user has the correct role
+  app.use(
+    "/*",
+    async (ctx, next: Next) => {
+      if (ctx.req.header("authorization")) {
+        return await honoJwt({
+          secret,
+        })(ctx, next);
+      }
+
+      return await next();
+    },
+  );
+
+  //
+  // UNAUTHENTICATED
+  //
+
   app.get("/status", (c) => c.json({ success: true }));
 
   app.get(
     "/feed/:id",
-    zValidator("param", feedHandler.schema),
-    feedHandler.handler,
+    zValidator("param", viewFeedHandler.schema),
+    viewFeedHandler.handler,
   );
 
-  const authApp = new Hono<{ Variables: HandlerContextVariables }>();
-
-  // JWT middleware
-  authApp.use(
-    "/*",
-    honoJwt({
-      secret,
-    }),
-  );
-
-  // must have at least authenticated role
-  // can also have service_role
-  authApp.use("/*", isRole(["service_role", "authenticated"]));
-
-  authApp.post(
+  app.post(
     "/customer",
     zValidator("json", createCustomerHandler.schema),
     createCustomerHandler.handler,
   );
 
-  authApp.post(
+  app.get(
+    "/customer/after",
+    afterCustomerHandler.handler,
+  );
+
+  app.post(
+    "/webhook/:source",
+    zValidator("param", inboundWebhookHandler.schema),
+    inboundWebhookHandler.handler,
+  );
+
+  //
+  // AUTHENTICATED
+  //
+
+  app.post(
     "/subscription",
+    isAuthenticated(),
     zValidator("json", createSubscribeHandler.schema),
     createSubscribeHandler.handler,
   );
 
-  // add auth routes
-  app.route("/", authApp);
+  app.post(
+    "/subscription/:id/feeds",
+    isAuthenticated(),
+    zValidator("json", updateSubscriptionFeedsHandler.schema),
+    updateSubscriptionFeedsHandler.handler,
+  );
+
+  app.get(
+    "/subscription/:id/feeds",
+    isAuthenticated(),
+    zValidator("json", updateSubscriptionFeedsHandler.schema),
+    updateSubscriptionFeedsHandler.handler,
+  );
+
+  app.post(
+    "/webhook/:id/process",
+    isRole(Roles.ServiceRole),
+    zValidator("param", processWebhookHandler.schema),
+    zValidator("json", processWebhookHandler.bodySchema),
+    processWebhookHandler.handler,
+  );
 
   return app;
 }
