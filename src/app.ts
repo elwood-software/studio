@@ -3,6 +3,8 @@ import { HandlerContextVariables } from "@/types.ts";
 import { connectDatabase } from "@/lib/connect-database.ts";
 import { isAuthenticated, isRole } from "@/lib/is-role.ts";
 import { createStripe } from "@/lib/stripe.ts";
+import * as orm from "./lib/orm.ts";
+import { Roles } from "@/constants.ts";
 
 import * as viewFeedHandler from "@/handler/feed/view.ts";
 import * as createSubscribeHandler from "@/handler/subscription/create.ts";
@@ -11,7 +13,6 @@ import * as updateSubscriptionFeedsHandler from "@/handler/subscription/update-f
 import * as afterCustomerHandler from "@/handler/customer/after.ts";
 import * as inboundWebhookHandler from "@/handler/webhook/inbound.ts";
 import * as processWebhookHandler from "@/handler/webhook/process.ts";
-import { Roles } from "@/constants.ts";
 
 // deno-lint-ignore require-await
 export async function createApp() {
@@ -25,6 +26,7 @@ export async function createApp() {
   app.use(async (c, next: Next) => {
     c.set("db", db);
     c.set("stripe", stripe);
+    c.set("orm", orm.provider(db));
     await next();
   });
 
@@ -37,7 +39,7 @@ export async function createApp() {
   app.onError((err, c) => {
     const status = (err as Error & { status: number }).status ?? 500;
 
-    console.log(err.message, err.stack);
+    console.log("ERROR", err.message, err.stack);
 
     return c.json(
       {

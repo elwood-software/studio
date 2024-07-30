@@ -6,6 +6,7 @@ import type {
   StudioSubscription,
 } from "@/types.ts";
 import { getStripeAccountId } from "@/lib/stripe.ts";
+import { SubscriptionNotAvailable } from "@/lib/errors.ts";
 
 export type CreateInput =
   & {
@@ -189,7 +190,7 @@ export async function verify(
   }
 
   if (!subscriptionId_) {
-    throw new Error("Subscription is not valid");
+    throw new SubscriptionNotAvailable("Subscription is not valid", 2);
   }
 
   // make sure the subscription is active

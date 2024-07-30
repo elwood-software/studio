@@ -40,6 +40,9 @@ export default async function main() {
         status: "ACTIVE",
         publish_at: entry.published?.toISOString(),
         parent_id: "3d0512e0-3b8d-44c5-a632-e62cda5e6479",
+        metadata: {
+          feed_guid: entry.id,
+        },
       },
     });
 
@@ -80,7 +83,8 @@ export default async function main() {
         category: "EPISODE",
         sub_category: "PUBLIC",
         data: {
-          target_node_id: data.data?.id,
+          target_node_type: "episode",
+          target_node_id: data?.id,
         },
         status: "ACTIVE",
       },

@@ -5,13 +5,13 @@ import {
   PostgresAdapter,
   PostgresIntrospector,
   PostgresQueryCompiler,
-} from "../_deps.ts";
+} from "@/_deps.ts";
 import type {
   ConnectDatabaseResult,
   ElwoodDatabaseTables,
   PublicTables,
-} from "../types.ts";
-import { PostgresDriver } from "./postgres-driver.ts";
+} from "@/types.ts";
+import { PostgresDriver } from "@/lib/postgres-driver.ts";
 
 export function connectDatabase(
   databaseUrl = Deno.env.get("DB_URL"),

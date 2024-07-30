@@ -1,5 +1,5 @@
-import { type HandlerContext } from "@/types.ts";
-import { z } from "@/_deps.ts";
+import { type HandlerContext, JsonObject } from "@/types.ts";
+import { xml, z } from "@/_deps.ts";
 import { rss } from "@/lib/rss-response.ts";
 import { feed, subscription } from "@/service/mod.ts";
 
@@ -15,11 +15,11 @@ export async function handler(
   try {
     const { id } = ctx.req.param() as Schema;
 
-    const row = await ctx.var.db.elwood.query.selectFrom("studio_node")
-      .selectAll()
-      .where("id", "=", id)
-      .where("category", "=", "FEED")
-      .executeTakeFirstOrThrow();
+    const row = await ctx.var.orm.studioNode(
+      (qb) =>
+        qb.where("id", "=", id)
+          .where("category", "=", "FEED"),
+    );
 
     // if it's a public feed
     // there's no need to check the subscription
@@ -32,9 +32,27 @@ export async function handler(
     return rss(ctx, result.rss);
   } catch (err) {
     console.log(err.message);
+    const code = (err as JsonObject).code ?? "-1";
 
     return rss(ctx, {
-      error: "Unable to fetch feed",
+      error: "Feed Not Available",
+      "elwood:error": {
+        "@code": code,
+        message: xml.comment(
+          [
+            "",
+            "Hello!",
+            "This feed is not available.",
+            "Please login and copy the feed URL agin.",
+            "",
+            "If you need help, you can email us at supper@elwood.studio or",
+            "visit us at https://elwood.studio/support",
+            "",
+          ].join("\n"),
+        ),
+        support_url: "https://elwood.studio/support",
+        error_url: `https://elwood.studio/docs/errors?code=${code}`,
+      },
     });
   }
 }

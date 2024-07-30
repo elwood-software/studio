@@ -23,6 +23,7 @@ export type {
   Driver,
   PostgresCursorConstructor,
   QueryResult,
+  SelectQueryBuilder,
   TransactionSettings,
 } from "kysely";
 
@@ -37,6 +38,7 @@ export * as _ from "underscore";
 export type {
   ElwoodDatabase,
   ElwoodQueryCreator,
+  Node,
   PublicDatabase,
   PublicQueryCreator,
 } from "@elwood/db/types";

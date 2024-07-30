@@ -6,15 +6,19 @@ import type {
   JwtVariables,
   Kysely,
   Next,
+  Node,
   Pool,
   PublicDatabase,
   PublicQueryCreator,
   Stripe,
 } from "./_deps.ts";
 
+import type { Orm } from "./lib/orm.ts";
+
 export type HandlerContextVariables = JwtVariables & {
   db: ConnectDatabaseResult;
   stripe: Stripe;
+  orm: Orm;
 };
 
 export type HandlerContext<

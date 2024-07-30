@@ -1,11 +1,17 @@
-import { type TypedResponse, xml } from "../_deps.ts";
-import { HandlerContext, JsonObject } from "../types.ts";
+import { type TypedResponse, xml } from "@/_deps.ts";
+import type { HandlerContext, JsonObject } from "@/types.ts";
 
 export function rss(
   ctx: HandlerContext,
   response: JsonObject,
   code = 200,
 ): TypedResponse {
+  const accept = ctx.req.header("Accept") ?? "application/rss";
+
+  if (accept === "application/json") {
+    return ctx.json(response);
+  }
+
   return ctx.text(
     xml.stringify({
       "@version": "1.0",
@@ -18,6 +24,7 @@ export function rss(
         "@xmlns:atom": "http://www.w3.org/2005/Atom",
         "@xmlns:spotify": "http://www.spotify.com/ns/rss",
         "@xmlns:dcterms": "http://purl.org/dc/terms/",
+        "@xmlns:elwood": "https://x.elwood.studio/ns/rss",
         ...response,
       },
     }),
