@@ -25,7 +25,7 @@ export async function handler(
     (await ctx.req.json()) as Schema;
 
   // make sure the node is active and published
-  const node = await db.public.query.selectFrom("elwood_studio_node")
+  const node = await db.elwood.query.selectFrom("studio_node")
     .select("id")
     .where(
       "id",

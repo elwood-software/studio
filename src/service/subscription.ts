@@ -41,6 +41,24 @@ export async function create(
     async (tx_) => {
       const tx = tx_.withSchema("elwood");
 
+      // get the customer
+      const customer = await tx.selectFrom("studio_customer").selectAll()
+        .$if(!!customer_id, (q) => q.where("id", "=", customer_id!))
+        .$if(!!user_id, (q) => q.where("user_id", "=", user_id!))
+        .executeTakeFirstOrThrow();
+
+      // see if this customer already has a subscription
+      // in stripe for this node
+      // if they do, we don't need to create a new one
+      const activeStripeSubscriptions = await findOnProvider(ctx, {
+        node_id,
+        customer_id: customer.id,
+      });
+
+      if (activeStripeSubscriptions !== false) {
+        throw new Error("Stripe Subscription Already Exists");
+      }
+
       // get the raw node so we can look up the instance id
       // which doesn't exist in the public node
       const node = await tx.selectFrom("node")
@@ -70,12 +88,6 @@ export async function create(
 
       assert(price, "Price not found");
       assert(price.stripe_id, "Price does not have a stripe id");
-
-      // get the customer
-      const customer = await tx.selectFrom("studio_customer").selectAll()
-        .$if(!!customer_id, (q) => q.where("id", "=", customer_id!))
-        .$if(!!user_id, (q) => q.where("user_id", "=", user_id!))
-        .executeTakeFirstOrThrow();
 
       // check if the customer has an active subscription to this node
       const currentSubscription = await tx.selectFrom(
@@ -199,4 +211,25 @@ export async function verify(
     .where("id", "=", subscriptionId_)
     .where("status", "=", DBConstant.StudioPlanStatuses.Active)
     .executeTakeFirstOrThrow();
+}
+
+export type FindOnProviderInput = {
+  node_id: string;
+  customer_id: string;
+};
+
+export async function findOnProvider(
+  ctx: HandlerContextVariables,
+  input: FindOnProviderInput,
+): Promise<string[] | false> {
+  const results = await ctx.stripe.subscriptions.search({
+    query:
+      `status: 'active' AND metadata['customer_id'] = '${input.customer_id}' AND metadata['node_id'] = '${input.node_id}'`,
+  });
+
+  if (!results) {
+    return false;
+  }
+
+  return results.data.map((item) => item.id);
 }

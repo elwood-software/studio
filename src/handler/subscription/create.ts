@@ -16,7 +16,7 @@ export async function handler(
   ctx: HandlerContext,
 ) {
   const { node_id, plan_id, price_id } = await ctx.req.json() as Schema;
-  const user_id = "48ee2fe0-e702-4ff1-a5e8-7461ef8711e0";
+  const user_id = "a00c37cb-a457-4511-963f-96ca60a44adc";
 
   // create a subscription for this customer
   const result = await subscription.create(ctx.var, {
@@ -25,23 +25,6 @@ export async function handler(
     user_id,
     price_id,
   });
-
-  // we've created the subscription, now we need to figure out
-  // what feed nodes we need to create for this user
-  const { entitled_node_ids } = await feed.listEntitledFeedsBySubscription(
-    ctx.var,
-    {
-      subscription_id: result.subscription.id,
-    },
-  );
-
-  // create all feeds this user is entitled to based on the subscription
-  await Promise.all(entitled_node_ids.map(async (node_id) => {
-    await feed.create(ctx.var, {
-      node_id,
-      subscription_id: result.subscription.id,
-    });
-  }));
 
   return ctx.json({
     id: result.subscription.id,

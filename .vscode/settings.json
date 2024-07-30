@@ -1,6 +1,9 @@
 {
   "deno.enable": true,
-  "deno.enablePaths": ["./", "!./template"],
+  "deno.enablePaths": [
+    "./",
+    "!./template"
+  ],
   "deno.lint": true,
   "eslint.workingDirectories": [
     {
@@ -27,9 +30,13 @@
   ],
   "editor.defaultFormatter": "denoland.vscode-deno",
   "[typescriptreact]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
   },
   "[javascriptreact]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
-  },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+  }
 }

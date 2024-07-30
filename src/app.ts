@@ -106,10 +106,17 @@ export async function createApp() {
     createSubscribeHandler.handler,
   );
 
+  app.get(
+    "/subscription/:id/feeds",
+    isAuthenticated(),
+    zValidator("param", updateSubscriptionFeedsHandler.schema),
+    updateSubscriptionFeedsHandler.handler,
+  );
+
   app.post(
     "/subscription/:id/feeds",
     isAuthenticated(),
-    zValidator("json", updateSubscriptionFeedsHandler.schema),
+    zValidator("param", updateSubscriptionFeedsHandler.schema),
     updateSubscriptionFeedsHandler.handler,
   );
 

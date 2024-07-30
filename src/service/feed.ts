@@ -66,10 +66,10 @@ export async function create(
 
   const feed = await db.query.insertInto("node").values({
     type: "BLOB",
-    updated_at: new Date(),
     instance_id: sql<string>`elwood.current_instance_id()`,
     name: ["subscription", input.node_id, input.subscription_id].join(":"),
     category_id: sql<string>`elwood.node_category_id('FEED')`,
+    sub_category_id: sql<string>`elwood.node_category_id('PRIVATE')`,
     parent_id: input.node_id,
     status: "ACTIVE",
     metadata: {
@@ -107,7 +107,7 @@ export async function listEntitledFeedsBySubscription(
     .where("id", "=", input.subscription_id)
     .executeTakeFirstOrThrow();
 
-  const node = await ctx.db.public.query.selectFrom("studio_node")
+  const node = await ctx.db.elwood.query.selectFrom("studio_node")
     .selectAll()
     .where(
       "id",
@@ -117,6 +117,7 @@ export async function listEntitledFeedsBySubscription(
     .executeTakeFirstOrThrow();
 
   switch (node.category) {
+    case "FEED":
     case "SHOW": {
       return {
         entitled_node_ids: [node.id],
