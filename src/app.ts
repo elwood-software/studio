@@ -13,6 +13,7 @@ import * as updateSubscriptionFeedsHandler from "@/handler/subscription/update-f
 import * as afterCustomerHandler from "@/handler/customer/after.ts";
 import * as inboundWebhookHandler from "@/handler/webhook/inbound.ts";
 import * as processWebhookHandler from "@/handler/webhook/process.ts";
+import * as planListHandler from "@/handler/plan/list.ts";
 
 // deno-lint-ignore require-await
 export async function createApp() {
@@ -93,6 +94,11 @@ export async function createApp() {
     "/webhook/:source",
     zValidator("param", inboundWebhookHandler.schema),
     inboundWebhookHandler.handler,
+  );
+
+  app.get(
+    "/plan",
+    planListHandler.handler,
   );
 
   //

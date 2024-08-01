@@ -2,7 +2,7 @@
   "deno.enable": true,
   "deno.enablePaths": [
     "./",
-    "!./template"
+    "!./templates"
   ],
   "deno.lint": true,
   "eslint.workingDirectories": [

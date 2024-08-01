@@ -104,7 +104,7 @@ export async function create(
         stripeAccount: stripeAccountIid,
       });
 
-      const _updatedCustomer = await tx.updateTable("studio_customer")
+      customer = await tx.updateTable("studio_customer")
         .set({
           metadata: {
             stripe_id: stripeCustomer.id,

@@ -11,3 +11,14 @@ export class SubscriptionNotAvailable extends Error {
     super(message);
   }
 }
+
+export function createQueryNotFoundError(message: string): new () => Error {
+  return class QueryNotFoundError extends Error {
+    status = 404;
+    name = "query_not_found";
+
+    constructor() {
+      super(message);
+    }
+  };
+}
