@@ -1,10 +1,11 @@
-import { assert, Hono, honoJwt, type Next, z, zValidator } from "@/_deps.ts";
+import { assert, cors, Hono, honoJwt, type Next, zValidator } from "@/_deps.ts";
 import { HandlerContextVariables } from "@/types.ts";
 import { connectDatabase } from "@/lib/connect-database.ts";
 import { isAuthenticated, isRole } from "@/lib/is-role.ts";
 import { createStripe } from "@/lib/stripe.ts";
-import * as orm from "./lib/orm.ts";
+import * as orm from "@/lib/orm.ts";
 import { Roles } from "@/constants.ts";
+import { instanceMiddleware } from "@/lib/instance-id.ts";
 
 import * as viewFeedHandler from "@/handler/feed/view.ts";
 import * as createSubscribeHandler from "@/handler/subscription/create.ts";
@@ -24,48 +25,14 @@ export async function createApp() {
 
   assert(secret, "missing JWT_SECRET");
 
+  app.use(instanceMiddleware);
+  app.use(cors());
   app.use(async (c, next: Next) => {
     c.set("db", db);
     c.set("stripe", stripe);
     c.set("orm", orm.provider(db));
     await next();
   });
-
-  /**
-   * Not found & Error
-   */
-  app.notFound((c) =>
-    c.json({ success: false, error: { name: "not_found" } }, 404)
-  );
-  app.onError((err, c) => {
-    const status = (err as Error & { status: number }).status ?? 500;
-
-    console.log("ERROR", err.message, err.stack);
-
-    return c.json(
-      {
-        success: false,
-        error: { name: "internal_error", message: (err as Error).message },
-      },
-      // deno-lint-ignore no-explicit-any
-      status as any,
-    );
-  });
-
-  // check the jwt only if one is provided
-  // the isRole middleware will check if the user has the correct role
-  app.use(
-    "/*",
-    async (ctx, next: Next) => {
-      if (ctx.req.header("authorization")) {
-        return await honoJwt({
-          secret,
-        })(ctx, next);
-      }
-
-      return await next();
-    },
-  );
 
   //
   // UNAUTHENTICATED
@@ -139,6 +106,42 @@ export async function createApp() {
     zValidator("param", processWebhookHandler.schema),
     zValidator("json", processWebhookHandler.bodySchema),
     processWebhookHandler.handler,
+  );
+
+  /**
+   * Not found & Error
+   */
+  app.notFound((c) =>
+    c.json({ success: false, error: { name: "not_found" } }, 404)
+  );
+  app.onError((err, c) => {
+    const status = (err as Error & { status: number }).status ?? 500;
+
+    console.log("ERROR", err.message, err.stack);
+
+    return c.json(
+      {
+        success: false,
+        error: { name: "internal_error", message: (err as Error).message },
+      },
+      // deno-lint-ignore no-explicit-any
+      status as any,
+    );
+  });
+
+  // check the jwt only if one is provided
+  // the isRole middleware will check if the user has the correct role
+  app.use(
+    "/*",
+    async (ctx, next: Next) => {
+      if (ctx.req.header("authorization")) {
+        return await honoJwt({
+          secret,
+        })(ctx, next);
+      }
+
+      return await next();
+    },
   );
 
   return app;

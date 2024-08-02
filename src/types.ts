@@ -16,6 +16,7 @@ import type {
 import type { Orm } from "./lib/orm.ts";
 
 export type HandlerContextVariables = JwtVariables & {
+  instanceId: string;
   db: ConnectDatabaseResult;
   stripe: Stripe;
   orm: Orm;

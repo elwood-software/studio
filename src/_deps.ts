@@ -8,6 +8,7 @@ export {
 export { z } from "zod";
 export { zValidator } from "@hono/zod-validator";
 export { jwt as honoJwt, type JwtVariables } from "hono/jwt";
+export { cors } from "hono/cors";
 export { assert } from "@std/assert/assert";
 export { stringify as stringifyYaml } from "@std/yaml/stringify";
 export {

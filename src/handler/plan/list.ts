@@ -14,6 +14,8 @@ export async function handler(
 ) {
   const query = ctx.get("db").elwood.query;
 
+  console.log(ctx.req.header("x-origin"));
+
   const plans = await query.selectFrom("studio_plan")
     .selectAll()
     .where(
