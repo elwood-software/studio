@@ -7,6 +7,7 @@ import * as orm from "@/lib/orm.ts";
 import { Roles } from "@/constants.ts";
 import { instanceMiddleware } from "@/lib/instance-id.ts";
 
+import * as siteHandler from "@/handler/site.ts";
 import * as viewFeedHandler from "@/handler/feed/view.ts";
 import * as createSubscribeHandler from "@/handler/subscription/create.ts";
 import * as createCustomerHandler from "@/handler/customer/create.ts";
@@ -39,6 +40,11 @@ export async function createApp() {
   //
 
   app.get("/status", (c) => c.json({ success: true }));
+
+  app.get(
+    "/site",
+    siteHandler.handler,
+  );
 
   app.get(
     "/feed/:id",
