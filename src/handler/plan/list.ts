@@ -1,9 +1,6 @@
 import type { HandlerContext } from "@/types.ts";
-import { assert, DBConstant, z } from "@/_deps.ts";
+import { DBConstant, z } from "@/_deps.ts";
 import { getStripeAccountId } from "@/lib/stripe.ts";
-
-import { feed, subscription } from "@/service/mod.ts";
-import { processRow } from "@/service/webhook.ts";
 
 export const schema = z.object({});
 
@@ -13,8 +10,7 @@ export async function handler(
   ctx: HandlerContext,
 ) {
   const query = ctx.get("db").elwood.query;
-
-  console.log(ctx.req.header("x-origin"));
+  const stripe = ctx.get("stripe");
 
   const plans = await query.selectFrom("studio_plan")
     .selectAll()
@@ -24,17 +20,37 @@ export async function handler(
       DBConstant.StudioPlanStatuses.Active,
     ).execute();
 
+  const stripeAccount = await getStripeAccountId(ctx.get("instanceId"));
+
   return ctx.json({
-    plans: plans.map((plan) => ({
-      id: plan.id,
-      title: plan.name,
-      features: plan.description,
-      prices: plan.prices?.map((price) => ({
-        id: price.id,
-        price: 9.99,
-        per: "month",
-      })),
-      includes: [],
+    plans: await Promise.all(plans.map(async (plan) => {
+      // get prices
+      const stripePrices = (await stripe.prices.search({
+        query: `active: 'true'`,
+      }, { stripeAccount })).data;
+
+      return {
+        id: plan.id,
+        title: plan.name,
+        features: plan.description,
+        prices: plan.prices?.map((price) => {
+          const stripePrice = stripePrices.find((stripePrice) =>
+            stripePrice.id === price.stripe_id
+          );
+
+          if (!stripePrice) {
+            return;
+          }
+
+          return {
+            id: price.id,
+            price: stripePrice.unit_amount,
+            per: "month",
+            currency: stripePrice.currency,
+          };
+        }).filter(Boolean),
+        includes: [],
+      };
     })),
   });
 }

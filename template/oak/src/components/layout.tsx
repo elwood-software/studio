@@ -1,6 +1,12 @@
 'use client';
 
-import {PropsWithChildren, ReactNode, useEffect, useState} from 'react';
+import {
+  MouseEventHandler,
+  PropsWithChildren,
+  ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 
 import {default as Link} from 'next/link';
 import {Button} from '@/components/ui/button';
@@ -19,6 +25,19 @@ import {
 
 export type LayoutProps = {
   sidebar: ReactNode;
+  onPlayPauseClick: MouseEventHandler;
+  onSpeedChange(value: number): void;
+  onMuteClick: MouseEventHandler;
+  onSeek(value: number | string): void;
+  playing?: {
+    paused: boolean;
+    muted: boolean;
+    speed: number;
+    title: string;
+    artwork: string;
+    progress: number;
+    duration: number;
+  };
 };
 
 export function Layout(props: PropsWithChildren<LayoutProps>) {
@@ -37,8 +56,8 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
         </Link>
         {props.sidebar}
       </div>
-      <div className="size-full grid grid-rows-[60px_auto] ">
-        <header className="flex justify-between">
+      <div className="size-full grid grid-rows-[60px_minmax(0,_1fr)] min-h-1">
+        <header className="flex justify-between border-b">
           <div></div>
           <div className="flex justify-end items-center px-12">
             <div
@@ -93,7 +112,13 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
             </div>
           </div>
         </header>
-        <div className="size-full">{props.children}</div>
+        <div className="size-full grid grid-rows-[1fr_minmax(auto,_80px)]">
+          <div className="flex-grow size-full overflow-y-auto overscroll-auto">
+            {props.children}
+          </div>
+
+          <div className="border-t">poop</div>
+        </div>
       </div>
     </div>
   );

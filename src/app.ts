@@ -32,6 +32,7 @@ export async function createApp() {
     c.set("db", db);
     c.set("stripe", stripe);
     c.set("orm", orm.provider(db));
+    c.set("userId", () => c.get("jwtPayload")?.sub);
     await next();
   });
 

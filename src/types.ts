@@ -20,6 +20,7 @@ export type HandlerContextVariables = JwtVariables & {
   db: ConnectDatabaseResult;
   stripe: Stripe;
   orm: Orm;
+  userId(): string | undefined;
 };
 
 export type HandlerContext<

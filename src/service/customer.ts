@@ -6,9 +6,10 @@ import { defaultInstanceId } from "@/constants.ts";
 
 export type CreateInput = {
   instanceId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  userId?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 };
 
 export type CreateResult = {
@@ -32,7 +33,8 @@ export async function create(
     // if there is we can can skip creating a user and new customer
     let customer = await tx.selectFrom("studio_customer")
       .selectAll()
-      .where("email", "=", input.email)
+      .$if(!!input.userId, (qb) => qb.where("user_id", "=", input.userId!))
+      .$if(!!input.email, (qb) => qb.where("email", "=", input.email!))
       .where("instance_id", "=", input.instanceId)
       .executeTakeFirst();
 
@@ -46,7 +48,8 @@ export async function create(
       let user = await authDb
         .selectFrom("users")
         .select("id")
-        .where("email", "=", input.email)
+        .$if(!!input.userId, (qb) => qb.where("id", "=", input.userId!))
+        .$if(!!input.email, (qb) => qb.where("email", "=", input.email!))
         .where("instance_id", "=", input.instanceId)
         .executeTakeFirst();
 

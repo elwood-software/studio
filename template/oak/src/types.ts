@@ -41,3 +41,17 @@ export type Plan = {
   prices: PlanPrice[];
   includes: PlanInclude[];
 };
+
+export type CheckoutActionState = {
+  success: boolean;
+  redirect_url?: string;
+  errors?: string[];
+};
+
+export type CheckoutActionData = {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  plan_id: string;
+  price_id: string;
+};

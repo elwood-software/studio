@@ -4,7 +4,7 @@ import {type MouseEvent} from 'react';
 import type {Plan} from '@/types';
 import {usePlans} from '@/data/use-plans';
 
-import {PlanList} from '@/components/plans';
+import {PlanList} from '@/components/plans/plans';
 
 export type SubscribePageProps = {
   plans: Plan[];

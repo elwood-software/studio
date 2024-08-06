@@ -6,7 +6,7 @@ import type {Ref} from 'react';
 import {Button, ButtonProps} from '@/components/ui/button';
 
 type Props = ButtonProps & {
-  ref: Ref<HTMLButtonElement> | undefined;
+  ref?: Ref<HTMLButtonElement> | undefined;
   pendingText?: string;
 };
 

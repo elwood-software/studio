@@ -8,9 +8,9 @@ import { createServiceSupabaseClient } from "@/lib/supabase.ts";
 export const schema = z.object({
   plan_id: z.string().uuid(),
   price_id: z.string().uuid(),
-  first_name: z.string(),
-  last_name: z.string(),
-  email: z.string().email(),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  email: z.string().email().optional(),
   mode: z.enum(["setup", "subscription"]).default("setup").optional(),
   return_url: z.string().url().optional(),
   success_url: z.string().url().optional(),
@@ -24,9 +24,7 @@ export async function handler(
   const stripe = ctx.get("stripe");
   const db = ctx.get("db");
   const serviceClient = createServiceSupabaseClient();
-  const { sub } = ctx.get("jwtPayload");
-
-  console.log(sub);
+  const sub = ctx.get("userId")();
 
   const {
     first_name,
@@ -54,6 +52,7 @@ export async function handler(
   // create a new customer and stripe customer
   const result = await customer.create(ctx.var, {
     instanceId: plan.instance_id,
+    userId: sub,
     email,
     firstName: first_name,
     lastName: last_name,

@@ -22,7 +22,7 @@ export default async function RootLayout(props: PropsWithChildren) {
 
   return (
     <html lang="en" className={GeistSans.className}>
-      <body className="bg-background text-foreground">
+      <body className="bg-background text-foreground overscroll-none">
         <Provider session={session.data?.session ?? null}>
           {props.children}
         </Provider>

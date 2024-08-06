@@ -31,9 +31,13 @@ export class Api {
     return plans;
   }
 
-  async createCustomer(body: any) {
-    return await this.fetch_('/plan', {
-      method: 'GET',
+  async createCustomer(body: any, headers: Record<string, string> = {}) {
+    return await this.fetch_('/customer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
       body: {
         ...body,
         mode: 'subscription',

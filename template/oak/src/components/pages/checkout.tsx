@@ -1,15 +1,21 @@
 'use client';
 
-import {type ComponentProps} from 'react';
+import {useFormState} from 'react-dom';
 import {useForm, SubmitHandler} from 'react-hook-form';
+import {useRouter} from 'next/navigation';
 import {zodResolver} from '@hookform/resolvers/zod';
-import {ChevronRight} from 'lucide-react';
+import {ChevronRight, ArrowLeft} from 'lucide-react';
+import {default as Link} from 'next/link';
 
 import type {Plan, PlanPrice} from '@/types';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
-import {Card, CardHeader, CardContent, CardFooter} from '../ui/card';
-import {checkoutFormSchema, type CheckoutForm} from '@/lib/schemas';
+import {Card, CardContent, CardFooter} from '../ui/card';
+import {
+  authenticatedCheckoutFormSchema,
+  checkoutFormSchema,
+  type CheckoutForm,
+} from '@/lib/schemas';
 import {
   Form,
   FormControl,
@@ -19,105 +25,178 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {PlanPrices} from '@/components/plans/prices';
+import {PlanHeader} from '@/components/plans/header';
 import {Spinner} from '@/components/spinner';
 import {useAppContext} from '@/hooks/use-app-context';
+
+import type {CheckoutActionData, CheckoutActionState} from '@/types';
 
 export type CheckoutPageProps = {
   plan: Plan;
   price: PlanPrice;
-  submitButtonProps: ComponentProps<typeof Button>;
+  formAction: (
+    state: CheckoutActionState,
+    data: CheckoutActionData,
+  ) => Promise<CheckoutActionState>;
 };
 
 export function CheckoutPage(props: CheckoutPageProps) {
-  const {plan} = props;
-  const [{isAuthenticated}] = useAppContext();
+  const router = useRouter();
+  const [state, formAction_] = useFormState<
+    CheckoutActionState,
+    CheckoutActionData
+  >(props.formAction, {
+    success: false,
+  });
+  const {plan, price} = props;
+  const [{isAuthenticated, user}] = useAppContext();
+
   const form = useForm<CheckoutForm>({
-    resolver: zodResolver(checkoutFormSchema),
+    resolver: zodResolver(
+      isAuthenticated ? authenticatedCheckoutFormSchema : checkoutFormSchema,
+    ),
     defaultValues: {
-      first_name: '',
-      last_name: '',
-      email: '',
+      first_name: user?.user_metadata.first_name ?? '',
+      last_name: user?.user_metadata.last_name ?? '',
+      email: user?.email ?? '',
     },
   });
 
-  const onSubmit: SubmitHandler<CheckoutForm> = function onSubmit(_, e) {
-    if (typeof props.submitButtonProps?.formAction === 'function') {
-      props.submitButtonProps?.formAction?.(new FormData(e?.target));
-    }
+  const formAction = formAction_ as unknown as (data: FormData) => void;
+
+  const onSubmit: SubmitHandler<CheckoutForm> = async function onSubmit(
+    data,
+    e,
+  ) {
+    e?.preventDefault();
+
+    formAction_({
+      ...data,
+      price_id: price.id,
+      plan_id: plan.id,
+    });
   };
+
+  function onPriceChange(nextPrice: string) {
+    router.replace(
+      `/subscribe/checkout?${new URLSearchParams({plan: plan.id, price: nextPrice}).toString()}`,
+    );
+  }
 
   return (
     <Form {...form}>
       <form
+        action={formAction as unknown as (data: FormData) => void}
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col items-center justify-center size-full">
         <Card className="w-full max-w-[50%]">
-          <CardHeader>{plan.title}</CardHeader>
+          <PlanHeader
+            plan={plan}
+            prepend={
+              <Link
+                href="/subscribe"
+                className="flex items-center text-xs text-muted-foreground">
+                <ArrowLeft className="size-[0.9em] mr-1" />
+                Back to Subscriptions
+              </Link>
+            }>
+            <PlanPrices plan={plan} onChange={onPriceChange} className="mt-6" />
+          </PlanHeader>
 
-          {isAuthenticated === null && (
-            <CardContent>
-              <Spinner />
-            </CardContent>
-          )}
-
-          {isAuthenticated === false && (
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="first_name"
-                  render={({field}) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="" {...field} />
-                      </FormControl>
-                      <FormDescription></FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="last_name"
-                  render={({field}) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormDescription></FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <CardContent className="space-y-6 pt-6">
+            {state?.errors && (
+              <div className="text-red-400 ">
+                {state?.errors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
               </div>
+            )}
 
+            {isAuthenticated === null && (
+              <div className="">
+                <Spinner />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="email"
+                name="first_name"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input
+                        readOnly={!!isAuthenticated}
+                        autoFocus={true}
+                        placeholder=""
+                        className="read-only:bg-muted read-only:focus:ring-0"
+                        {...field}
+                      />
                     </FormControl>
-                    <FormDescription className="text-muted-foreground/50">
-                      We'll never share your email with anyone else.
-                    </FormDescription>
+                    <FormDescription></FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </CardContent>
-          )}
+
+              <FormField
+                control={form.control}
+                name="last_name"
+                render={({field}) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        readOnly={!!isAuthenticated}
+                        className="read-only:bg-muted read-only:focus:ring-0"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription></FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({field}) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="read-only:bg-muted read-only:focus:ring-0"
+                      readOnly={!!isAuthenticated}
+                      type="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-muted-foreground/50">
+                    We'll never share your email with anyone else.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+
           <CardFooter className="bg-muted pt-6 rounded-b-lg flex flex-col items-center border-t">
             <Button
-              {...props.submitButtonProps}
+              disabled={form.formState.isSubmitSuccessful}
               type="submit"
-              className="w-full">
-              Continue <ChevronRight />
+              className="w-full"
+              autoFocus={isAuthenticated === false}>
+              {form.formState.isSubmitSuccessful ? (
+                <Spinner className="size-[0.9em]" />
+              ) : (
+                <>
+                  Continue <ChevronRight />
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>
