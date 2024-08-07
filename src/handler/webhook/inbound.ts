@@ -72,7 +72,9 @@ export async function handler(
       });
     }
   } catch (err) {
-    console.log(err.message, "error importing webhook");
+    console.log("error importing webhook");
+    console.log(err.message);
+    console.log(err.stack);
   }
 
   return ctx.json({});

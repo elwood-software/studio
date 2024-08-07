@@ -18,7 +18,12 @@ export function SubscribePage(props: SubscribePageProps) {
   function onSubscribeClick(e: MouseEvent, planId: string, priceId: string) {}
 
   return (
-    <div className="flex space-x-3">
+    <div className="flex space-x-3 items-center flex-col">
+      <header className="py-12 flex items-center justify-center flex-col">
+        <h1 className="text-6xl font-extrabold">Subscribe</h1>
+        <h2 className="text-xl text-muted-foreground">Pick your plan</h2>
+      </header>
+
       <PlanList plans={data ?? []} onSubscribeClick={onSubscribeClick} />
     </div>
   );

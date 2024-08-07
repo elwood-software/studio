@@ -28,13 +28,24 @@ export async function createApp() {
 
   app.use(instanceMiddleware);
   app.use(cors());
-  app.use(async (c, next: Next) => {
-    c.set("db", db);
-    c.set("stripe", stripe);
-    c.set("orm", orm.provider(db));
-    c.set("userId", () => c.get("jwtPayload")?.sub);
-    await next();
-  });
+  app.use(
+    async (ctx, next: Next) => {
+      if (ctx.req.header("authorization")) {
+        return await honoJwt({
+          secret,
+        })(ctx, next);
+      }
+
+      return await next();
+    },
+    async (c, next: Next) => {
+      c.set("db", db);
+      c.set("stripe", stripe);
+      c.set("orm", orm.provider(db));
+      c.set("userId", () => c.get("jwtPayload")?.sub);
+      await next();
+    },
+  );
 
   //
   // UNAUTHENTICATED
@@ -135,21 +146,6 @@ export async function createApp() {
       status as any,
     );
   });
-
-  // check the jwt only if one is provided
-  // the isRole middleware will check if the user has the correct role
-  app.use(
-    "/*",
-    async (ctx, next: Next) => {
-      if (ctx.req.header("authorization")) {
-        return await honoJwt({
-          secret,
-        })(ctx, next);
-      }
-
-      return await next();
-    },
-  );
 
   return app;
 }

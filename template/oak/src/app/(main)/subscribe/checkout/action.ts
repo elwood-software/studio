@@ -16,8 +16,6 @@ export async function action(
   const client = createClient();
   const origin = headers().get('origin');
 
-  await new Promise(resolve => setTimeout(resolve, 100000));
-
   // see if we already have a suer
   const currentUser = await client.auth.getUser();
 
