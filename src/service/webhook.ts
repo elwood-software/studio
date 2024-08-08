@@ -4,7 +4,7 @@ import type {
   StudioWebhook,
 } from "@/types.ts";
 import { _, DBConstant } from "@/_deps.ts";
-import { subscription } from "@/service/mod.ts";
+import { entitlements, feed, subscription } from "@/service/mod.ts";
 
 export async function processRow(
   ctx: HandlerContextVariables,
@@ -56,7 +56,6 @@ export async function processStripe(
 
           if (!subscription_id) {
             const result = await subscription.create(ctx, {
-              node_id: metadata.node_id,
               plan_id: metadata.plan_id,
               price_id: metadata.price_id,
               customer_id: metadata.customer_id,
@@ -76,6 +75,11 @@ export async function processStripe(
             })
             .where("id", "=", subscription_id)
             .execute();
+
+          // build their entitlements
+          await entitlements.updateForSubscription(ctx, {
+            subscription_id: subscription_id,
+          });
 
           // tell them what's up
           log.push("subscription created");

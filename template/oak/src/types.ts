@@ -8,6 +8,7 @@ export type AppState = {
   isAuthenticated: boolean | null;
   user: User | null;
   session: Session | null;
+  site: Site | null;
 };
 
 export type AppContextAction = {
@@ -22,7 +23,11 @@ export type AppContextValue = [AppState, Dispatch<AppContextAction>];
 
 export type PlanPrice = {
   id: string;
-  price: number;
+  price: {
+    amount: number;
+    decimal: string;
+    currency: string;
+  };
   per: 'month' | 'year' | 'one-time' | '3-months' | '6-months';
 };
 
@@ -54,4 +59,33 @@ export type CheckoutActionData = {
   email?: string;
   plan_id: string;
   price_id: string;
+};
+
+export type Subscription = {
+  id: string;
+  plan_id: string;
+};
+
+export type Entitlement = {
+  id: string;
+  type: 'feed';
+};
+
+export type Site = {
+  active: boolean;
+  layoutType: 'show' | 'network';
+  name: string;
+  description: string;
+  artwork: string;
+  main_node_id: string;
+  meta: {
+    title: string;
+    description: string;
+  };
+  shows: Array<{
+    id: string;
+    displayName: string;
+    name: string;
+    artwork: string;
+  }>;
 };

@@ -8,20 +8,17 @@ export async function serverFetch(url: string, init: RequestInit) {
   const origin = h.get('x-forwarded-host') ?? h.get('host') ?? '';
   const baseUrl = process.env.NEXT_PUBLIC_STUDIO_API;
   const {data: session} = await client.auth.getSession();
-  const initHeaders = (init.headers ?? {}) as Record<string, string>;
-
+  const headers_ = new Headers(init.headers ?? {});
   const authHeader = session?.session?.access_token
     ? `Bearer ${session?.session?.access_token}`
     : undefined;
 
-  const headers_ = {
-    Authorization: authHeader as string,
-    'x-origin': origin,
-    'Content-Type': 'application/json',
-    ...initHeaders,
-  };
+  headers_.set('x-origin', origin);
+  headers_.set('Content-Type', 'application/json');
 
-  console.log(init.body);
+  if (authHeader) {
+    headers_.set('Authorization', authHeader);
+  }
 
   const response = await fetch(`${baseUrl}${url}`, {
     ...init,
@@ -33,8 +30,6 @@ export async function serverFetch(url: string, init: RequestInit) {
     success: boolean;
     error: any;
   };
-
-  console.log(body, response.ok);
 
   if (!body.success && body.error?.issues) {
     throw ZodError.create(body.error.issues);

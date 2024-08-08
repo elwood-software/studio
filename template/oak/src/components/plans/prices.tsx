@@ -33,6 +33,8 @@ export function PlanPrices(props: PlanPricesProps) {
   const {plan} = props;
   const selectedPriceId = selectedPrice ?? plan.prices[0].id;
 
+  console.log(plan);
+
   return (
     <Tabs
       className={props.className}
@@ -52,14 +54,14 @@ export function PlanPrices(props: PlanPricesProps) {
           ))}
         </TabsList>
       )}
-      {plan.prices.map(price => (
+      {plan.prices.map(item => (
         <TabsContent
-          value={price.id}
-          key={`subscribe-plan-${plan.id}-${price.id}-content`}>
+          value={item.id}
+          key={`subscribe-plan-${plan.id}-${item.id}-content`}>
           <strong className="text-3xl">
-            <Currency value={plan.prices[0].price} />
+            <Currency value={item.price.amount} />
           </strong>
-          /{per[price.per]}
+          /{per[item.per]}
         </TabsContent>
       ))}
     </Tabs>

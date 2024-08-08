@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  MouseEventHandler,
-  PropsWithChildren,
-  ReactNode,
-  useEffect,
-  useState,
-} from 'react';
+import {PropsWithChildren, ReactNode, useEffect, useState} from 'react';
 
 import {default as Link} from 'next/link';
 import {Button} from '@/components/ui/button';
@@ -22,26 +16,14 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
+import {LayoutPlayer} from './layout-player';
 
 export type LayoutProps = {
   sidebar: ReactNode;
-  onPlayPauseClick: MouseEventHandler;
-  onSpeedChange(value: number): void;
-  onMuteClick: MouseEventHandler;
-  onSeek(value: number | string): void;
-  playing?: {
-    paused: boolean;
-    muted: boolean;
-    speed: number;
-    title: string;
-    artwork: string;
-    progress: number;
-    duration: number;
-  };
 };
 
 export function Layout(props: PropsWithChildren<LayoutProps>) {
-  const [{isAuthenticated, user}] = useAppContext();
+  const [{isAuthenticated, user, site}] = useAppContext();
   const [ready, setReady] = useState(isAuthenticated !== null);
 
   useEffect(() => {
@@ -51,9 +33,19 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
   return (
     <div className="w-screen h-screen grid grid-cols-[1fr_4fr]">
       <div className="bg-muted/50 border-r p-12">
-        <Link href="/">
-          <img src="https://placehold.co/600" className="w-full" />
-        </Link>
+        <figure className="mb-6">
+          <Link href="/" className="">
+            <img src={site?.artwork} className="w-full" />
+          </Link>
+        </figure>
+
+        <div>
+          <strong className="text-xl font-extrabold block mb-1">
+            {site?.name}
+          </strong>
+          <p>{site?.description}</p>
+        </div>
+
         {props.sidebar}
       </div>
       <div className="size-full grid grid-rows-[60px_minmax(0,_1fr)] min-h-1">
@@ -116,8 +108,7 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
           <div className="flex-grow size-full overflow-y-auto overscroll-auto">
             {props.children}
           </div>
-
-          <div className="border-t">poop</div>
+          <LayoutPlayer />
         </div>
       </div>
     </div>

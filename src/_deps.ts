@@ -42,6 +42,7 @@ export type {
   Node,
   PublicDatabase,
   PublicQueryCreator,
+  StudioCustomer,
 } from "@elwood/db/types";
 export * as DBConstant from "@elwood/db/constants";
 

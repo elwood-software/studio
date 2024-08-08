@@ -14,11 +14,13 @@ export function getStripeWebhookSecret(): string {
  */
 export function createStripe(
   apiKey = Deno.env.get("STRIPE_SECRET_KEY"),
+  stripeAccountId = Deno.env.get("STRIPE_ACCOUNT_ID"),
 ): Stripe {
   assert(apiKey, "STRIPE_SECRET_KEY is required");
 
   return new Stripe(apiKey, {
     httpClient: Stripe.createFetchHttpClient(),
+    stripeAccount: stripeAccountId,
   });
 }
 

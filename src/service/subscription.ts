@@ -10,7 +10,6 @@ import { SubscriptionNotAvailable } from "@/lib/errors.ts";
 
 export type CreateInput =
   & {
-    node_id: string;
     plan_id: string;
     price_id: string;
     stripe_subscription_id?: string;
@@ -23,7 +22,6 @@ export type CreateInput =
 export type CreateResult = {
   outcome: "created" | "exists";
   subscription: StudioSubscription;
-  node: Node;
   customer: StudioCustomer;
 };
 
@@ -33,7 +31,9 @@ export async function create(
 ): Promise<CreateResult> {
   const stripe = ctx.stripe;
   const db = ctx.db.elwood;
-  const { node_id, plan_id, user_id, customer_id } = input;
+  const { plan_id, user_id, customer_id } = input;
+
+  console.log(input);
 
   // do the subscription in a transaction
   // to make sure we roll back if anything fails
@@ -50,29 +50,16 @@ export async function create(
       // see if this customer already has a subscription
       // in stripe for this node
       // if they do, we don't need to create a new one
-      const activeStripeSubscriptions = await findOnProvider(ctx, {
-        node_id,
-        customer_id: customer.id,
-      });
+      if (!input.stripe_subscription_id) {
+        const activeStripeSubscriptions = await findOnProvider(ctx, {
+          plan_id,
+          customer_id: customer.id,
+        });
 
-      if (activeStripeSubscriptions !== false) {
-        throw new Error("Stripe Subscription Already Exists");
+        if (activeStripeSubscriptions.length > 0) {
+          throw new Error("Stripe Subscription Already Exists");
+        }
       }
-
-      // get the raw node so we can look up the instance id
-      // which doesn't exist in the public node
-      const node = await tx.selectFrom("node")
-        .selectAll()
-        .where(
-          "id",
-          "=",
-          node_id,
-        )
-        .executeTakeFirstOrThrow();
-
-      const stripe_account_id = await getStripeAccountId(node.instance_id);
-
-      assert("stripe_account_id", "Stripe account not found");
 
       const plan = await tx.selectFrom("studio_plan")
         .selectAll()
@@ -82,6 +69,10 @@ export async function create(
           plan_id,
         )
         .executeTakeFirstOrThrow();
+
+      const stripe_account_id = await getStripeAccountId(plan.instance_id);
+
+      assert("stripe_account_id", "Stripe account not found");
 
       // price
       const price = plan.prices?.find((item) => item.id === input.price_id);
@@ -104,7 +95,6 @@ export async function create(
           outcome: "exists",
           subscription: currentSubscription,
           customer,
-          node,
         } as CreateResult;
       }
 
@@ -117,9 +107,9 @@ export async function create(
       // create a new subscription
       let subscription = await tx.insertInto("studio_subscription")
         .values({
-          instance_id: node.instance_id,
+          node_id: plan.node_id,
+          instance_id: plan.instance_id,
           customer_id: customer.id,
-          node_id: node.id,
           plan_id: plan.id,
           status: DBConstant.StudioSubscriptionStatuses.Pending,
           metadata: {
@@ -142,7 +132,6 @@ export async function create(
             },
           ],
           metadata: {
-            node_id: node.id,
             plan_id: plan.id,
             price_id: price.id,
             customer_id: customer.id,
@@ -168,7 +157,6 @@ export async function create(
         outcome: "created",
         subscription,
         customer,
-        node,
       } as CreateResult;
     },
   );
@@ -214,22 +202,46 @@ export async function verify(
 }
 
 export type FindOnProviderInput = {
-  node_id: string;
+  plan_id: string;
   customer_id: string;
+  provider_id?: never;
+} | {
+  provider_id: string;
+  plan_id?: never;
+  customer_id?: never;
+};
+
+export type FindOnProviderResult = {
+  id: string;
+  active: boolean;
 };
 
 export async function findOnProvider(
   ctx: HandlerContextVariables,
   input: FindOnProviderInput,
-): Promise<string[] | false> {
+  onlyActive = true,
+): Promise<FindOnProviderResult[]> {
+  if (input.provider_id) {
+    const result = await ctx.stripe.subscriptions.retrieve(input.provider_id);
+
+    return [
+      { id: result.id, active: result.status === "active" },
+    ];
+  }
+
   const results = await ctx.stripe.subscriptions.search({
     query:
-      `status: 'active' AND metadata['customer_id'] = '${input.customer_id}' AND metadata['node_id'] = '${input.node_id}'`,
+      `metadata['customer_id']: '${input.customer_id}' AND metadata['plan_id']: '${input.plan_id}'`,
   });
 
   if (!results) {
-    return false;
+    return [];
   }
 
-  return results.data.map((item) => item.id);
+  return results.data
+    .map((item) => ({
+      id: item.id,
+      active: item.status === "active",
+    }))
+    .filter((item) => onlyActive ? item.active : true);
 }

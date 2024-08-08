@@ -82,58 +82,6 @@ export async function create(
   return { feed };
 }
 
-export type ListEntitledFeedsBySubscriptionInput = {
-  subscription_id: string;
-};
-
-export type ListEntitledFeedsBySubscriptionResult = {
-  entitled_node_ids: string[];
-};
-
-/**
- * list the feeds that a subscription entitles a customer to
- * @param ctx
- * @param input
- * @returns
- */
-export async function listEntitledFeedsBySubscription(
-  ctx: HandlerContextVariables,
-  input: ListEntitledFeedsBySubscriptionInput,
-): Promise<ListEntitledFeedsBySubscriptionResult> {
-  const db = ctx.db.elwood;
-
-  const subscription = await db.query.selectFrom("studio_subscription")
-    .selectAll()
-    .where("id", "=", input.subscription_id)
-    .executeTakeFirstOrThrow();
-
-  const node = await ctx.db.elwood.query.selectFrom("studio_node")
-    .selectAll()
-    .where(
-      "id",
-      "=",
-      subscription.node_id,
-    )
-    .executeTakeFirstOrThrow();
-
-  switch (node.category) {
-    case "FEED":
-    case "SHOW": {
-      return {
-        entitled_node_ids: [node.id],
-      };
-    }
-    case "NETWORK": {
-      return {
-        entitled_node_ids: [node.id],
-      };
-    }
-    default: {
-      throw new Error("Invalid node category for subscription");
-    }
-  }
-}
-
 export type CompileRssInput = {
   feed: StudioNode;
 };

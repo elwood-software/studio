@@ -44,9 +44,12 @@ export async function handler(
 
           return {
             id: price.id,
-            price: stripePrice.unit_amount,
             per: "month",
-            currency: stripePrice.currency,
+            price: {
+              amount: stripePrice.unit_amount,
+              decimal: stripePrice.unit_amount_decimal,
+              currency: stripePrice.currency,
+            },
           };
         }).filter(Boolean),
         includes: [],

@@ -84,6 +84,8 @@ export function CheckoutPage(props: CheckoutPageProps) {
     );
   }
 
+  console.log(form.formState.errors);
+
   return (
     <Form {...form}>
       <form
@@ -186,11 +188,11 @@ export function CheckoutPage(props: CheckoutPageProps) {
 
           <CardFooter className="bg-muted pt-6 rounded-b-lg flex flex-col items-center border-t">
             <Button
-              disabled={form.formState.isSubmitSuccessful}
+              disabled={form.formState.isSubmitting}
               type="submit"
               className="w-full"
               autoFocus={isAuthenticated === false}>
-              {form.formState.isSubmitSuccessful ? (
+              {form.formState.isSubmitting ? (
                 <Spinner className="size-[0.9em]" />
               ) : (
                 <>

@@ -24,7 +24,7 @@ export async function handler(
   const stripe = ctx.get("stripe");
   const db = ctx.get("db");
   const serviceClient = createServiceSupabaseClient();
-  const sub = ctx.get("userId")();
+  const sub = ctx.get("userId");
 
   const {
     first_name,
@@ -98,6 +98,7 @@ export async function handler(
       id: result.customer.id,
       auth_link: data.properties?.action_link,
       checkout_url: checkoutSession.url,
+      checkout_session_id: checkoutSession.id,
     });
   }
 
@@ -118,5 +119,6 @@ export async function handler(
   return ctx.json({
     id: result.customer.id,
     checkout_secret: checkoutSession.client_secret,
+    checkout_session_id: checkoutSession.id,
   });
 }

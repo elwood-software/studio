@@ -2,27 +2,28 @@ import { assert, cors, Hono, honoJwt, type Next, zValidator } from "@/_deps.ts";
 import { HandlerContextVariables } from "@/types.ts";
 import { connectDatabase } from "@/lib/connect-database.ts";
 import { isAuthenticated, isRole } from "@/lib/is-role.ts";
-import { createStripe } from "@/lib/stripe.ts";
+import { createStripe, getStripeAccountId } from "@/lib/stripe.ts";
 import * as orm from "@/lib/orm.ts";
 import { Roles } from "@/constants.ts";
 import { instanceMiddleware } from "@/lib/instance-id.ts";
 
-import * as siteHandler from "@/handler/site.ts";
 import * as viewFeedHandler from "@/handler/feed/view.ts";
 import * as createSubscribeHandler from "@/handler/subscription/create.ts";
 import * as createCustomerHandler from "@/handler/customer/create.ts";
-import * as updateSubscriptionFeedsHandler from "@/handler/subscription/update-feeds.ts";
+import * as updateSubscriptionEntitlementsHandler from "@/handler/subscription/update-entitlements.ts";
+import * as listSubscriptionEntitlementsHandler from "@/handler/subscription/list-entitlements.ts";
 import * as afterCustomerHandler from "@/handler/customer/after.ts";
 import * as inboundWebhookHandler from "@/handler/webhook/inbound.ts";
 import * as processWebhookHandler from "@/handler/webhook/process.ts";
 import * as planListHandler from "@/handler/plan/list.ts";
+import * as listSubscriptionsHandler from "@/handler/subscription/list.ts";
+import * as viewSiteHandler from "@/handler/site/view.ts";
 
 // deno-lint-ignore require-await
 export async function createApp() {
   const app = new Hono<{ Variables: HandlerContextVariables }>();
   const secret = Deno.env.get("JWT_SECRET");
   const db = connectDatabase();
-  const stripe = createStripe();
 
   assert(secret, "missing JWT_SECRET");
 
@@ -39,10 +40,28 @@ export async function createApp() {
       return await next();
     },
     async (c, next: Next) => {
+      const userId = c.get("jwtPayload")?.sub;
+
       c.set("db", db);
-      c.set("stripe", stripe);
+      c.set(
+        "stripe",
+        createStripe(undefined, await getStripeAccountId(c.get("instanceId"))),
+      );
       c.set("orm", orm.provider(db));
-      c.set("userId", () => c.get("jwtPayload")?.sub);
+      c.set("userId", userId);
+
+      // if there's a user id
+      // we need to map it to a customer
+      if (userId) {
+        c.set(
+          "customer",
+          await db.elwood.query.selectFrom("studio_customer")
+            .selectAll()
+            .where("user_id", "=", userId)
+            .where("instance_id", "=", c.get("instanceId"))
+            .executeTakeFirst(),
+        );
+      }
       await next();
     },
   );
@@ -55,7 +74,8 @@ export async function createApp() {
 
   app.get(
     "/site",
-    siteHandler.handler,
+    zValidator("header", viewSiteHandler.schema),
+    viewSiteHandler.handler,
   );
 
   app.get(
@@ -90,6 +110,13 @@ export async function createApp() {
   // AUTHENTICATED
   //
 
+  app.get(
+    "/subscription",
+    isAuthenticated(),
+    zValidator("query", listSubscriptionsHandler.schema),
+    listSubscriptionsHandler.handler,
+  );
+
   app.post(
     "/subscription",
     isAuthenticated(),
@@ -98,24 +125,17 @@ export async function createApp() {
   );
 
   app.get(
-    "/subscription/:id/feeds",
+    "/subscription/:id/entitlements",
     isAuthenticated(),
-    zValidator("param", updateSubscriptionFeedsHandler.schema),
-    updateSubscriptionFeedsHandler.handler,
+    zValidator("param", listSubscriptionEntitlementsHandler.schema),
+    listSubscriptionEntitlementsHandler.handler,
   );
 
   app.post(
-    "/subscription/:id/feeds",
+    "/subscription/:id/entitlements",
     isAuthenticated(),
-    zValidator("param", updateSubscriptionFeedsHandler.schema),
-    updateSubscriptionFeedsHandler.handler,
-  );
-
-  app.get(
-    "/subscription/:id/feeds",
-    isAuthenticated(),
-    zValidator("json", updateSubscriptionFeedsHandler.schema),
-    updateSubscriptionFeedsHandler.handler,
+    zValidator("param", updateSubscriptionEntitlementsHandler.schema),
+    updateSubscriptionEntitlementsHandler.handler,
   );
 
   app.post(

@@ -2,8 +2,10 @@ import {PropsWithChildren} from 'react';
 
 import {GeistSans} from 'geist/font/sans';
 import './globals.css';
-import {Provider} from './provider';
+import {Provider, type ProviderProps} from './provider';
 import {createClient} from '@/utils/supabase/server';
+import {Api} from '@/data/api';
+import {serverFetch} from '@/lib/server-fetch';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -19,13 +21,40 @@ export const metadata = {
 export default async function RootLayout(props: PropsWithChildren) {
   const client = createClient();
   const session = await client.auth.getSession();
+  const site = await new Api(serverFetch).site();
 
+  if (!site) {
+    return (
+      <Shell>
+        <div>Site Not Found</div>
+      </Shell>
+    );
+  }
+
+  if (site.active !== true) {
+    return (
+      <Shell>
+        <div>coming soon</div>
+      </Shell>
+    );
+  }
+
+  console.log(site);
+
+  return (
+    <Shell>
+      <Provider site={site} session={session.data.session ?? null}>
+        {props.children}
+      </Provider>
+    </Shell>
+  );
+}
+
+function Shell(props: PropsWithChildren): JSX.Element {
   return (
     <html lang="en" className={GeistSans.className}>
       <body className="bg-background text-foreground overscroll-none">
-        <Provider session={session.data?.session ?? null}>
-          {props.children}
-        </Provider>
+        {props.children}
       </body>
     </html>
   );

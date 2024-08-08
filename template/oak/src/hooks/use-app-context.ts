@@ -7,13 +7,20 @@ import React, {
 } from 'react';
 
 import {createClient} from '@/utils/supabase/client';
-import {AppContextValue, AppState, AppContextAction, Supabase} from '@/types';
+import {
+  AppContextValue,
+  AppState,
+  AppContextAction,
+  Supabase,
+  Site,
+} from '@/types';
 
 const defaultValue: AppState = {
   client: null,
   isAuthenticated: null,
   user: null,
   session: null,
+  site: null,
 };
 
 const AppContext = createContext<AppContextValue>([
@@ -23,6 +30,7 @@ const AppContext = createContext<AppContextValue>([
 
 export type AppContextProviderProps = {
   session: Supabase.Session | null;
+  site: Site | null;
 };
 
 export function AppContextProvider(
@@ -34,6 +42,7 @@ export function AppContextProvider(
       ...defaultValue,
       client: createClient(),
       isAuthenticated: !!props.session,
+      site: props.site,
       user: props.session?.user || null,
       session: props.session,
     },

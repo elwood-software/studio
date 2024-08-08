@@ -81,7 +81,7 @@ export async function action(
       {
         ...data,
         return_url: `${origin}/subscribe/checkout?plan=${data.plan_id}&price=${data.price_id}`,
-        success_url: `${origin}/subscribe/checkout/complete`,
+        success_url: `${origin}/subscribe/checkout/complete?plan=${data.plan_id}`,
       },
       {
         Authorization: `Bearer ${access_token}`,

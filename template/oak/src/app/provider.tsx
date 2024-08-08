@@ -7,6 +7,8 @@ import {
   type AppContextProviderProps,
 } from '@/hooks/use-app-context';
 
+export type ProviderProps = AppContextProviderProps;
+
 export function Provider(props: PropsWithChildren<AppContextProviderProps>) {
   const [queryClient] = useState(
     () =>
