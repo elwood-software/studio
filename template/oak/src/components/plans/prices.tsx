@@ -33,8 +33,6 @@ export function PlanPrices(props: PlanPricesProps) {
   const {plan} = props;
   const selectedPriceId = selectedPrice ?? plan.prices[0].id;
 
-  console.log(plan);
-
   return (
     <Tabs
       className={props.className}

@@ -19,35 +19,39 @@ export const metadata = {
 };
 
 export default async function RootLayout(props: PropsWithChildren) {
-  const client = createClient();
-  const session = await client.auth.getSession();
-  const site = await new Api(serverFetch).site();
+  try {
+    const client = createClient();
+    const session = await client.auth.getSession();
+    const site = await new Api(serverFetch).site();
 
-  if (!site) {
+    if (!site) {
+      return (
+        <Shell>
+          <div>Site Not Found</div>
+        </Shell>
+      );
+    }
+
+    if (site.active !== true) {
+      return (
+        <Shell>
+          <div>coming soon</div>
+        </Shell>
+      );
+    }
+
+    console.log(site);
+
     return (
       <Shell>
-        <div>Site Not Found</div>
+        <Provider site={site} session={session.data.session ?? null}>
+          {props.children}
+        </Provider>
       </Shell>
     );
+  } catch (_err) {
+    return <Shell>500 Error</Shell>;
   }
-
-  if (site.active !== true) {
-    return (
-      <Shell>
-        <div>coming soon</div>
-      </Shell>
-    );
-  }
-
-  console.log(site);
-
-  return (
-    <Shell>
-      <Provider site={site} session={session.data.session ?? null}>
-        {props.children}
-      </Provider>
-    </Shell>
-  );
 }
 
 function Shell(props: PropsWithChildren): JSX.Element {

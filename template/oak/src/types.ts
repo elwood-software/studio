@@ -51,6 +51,7 @@ export type CheckoutActionState = {
   success: boolean;
   redirect_url?: string;
   errors?: string[];
+  loading: boolean;
 };
 
 export type CheckoutActionData = {

@@ -47,6 +47,7 @@ export function CheckoutPage(props: CheckoutPageProps) {
     CheckoutActionState,
     CheckoutActionData
   >(props.formAction, {
+    loading: false,
     success: false,
   });
   const {plan, price} = props;
@@ -103,7 +104,9 @@ export function CheckoutPage(props: CheckoutPageProps) {
                 Back to Subscriptions
               </Link>
             }>
-            <PlanPrices plan={plan} onChange={onPriceChange} className="mt-6" />
+            <div className="pt-6">
+              <PlanPrices plan={plan} onChange={onPriceChange} />
+            </div>
           </PlanHeader>
 
           <CardContent className="space-y-6 pt-6">
@@ -188,11 +191,11 @@ export function CheckoutPage(props: CheckoutPageProps) {
 
           <CardFooter className="bg-muted pt-6 rounded-b-lg flex flex-col items-center border-t">
             <Button
-              disabled={form.formState.isSubmitting}
+              disabled={state.loading || form.formState.isSubmitting}
               type="submit"
               className="w-full"
               autoFocus={isAuthenticated === false}>
-              {form.formState.isSubmitting ? (
+              {state.loading || form.formState.isSubmitting ? (
                 <Spinner className="size-[0.9em]" />
               ) : (
                 <>
