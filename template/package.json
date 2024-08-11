@@ -2,20 +2,28 @@
   "name": "@elwood/templates",
   "version": "1.0.0",
   "type": "module",
-  "description": "",
+  "description": "Templates for Elwood Studio",
   "private": true,
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "hello@elwood.studio",
+  "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^9.8.0",
+    "@eslint/js": "^9.9.0",
     "@types/eslint__js": "^8.42.3",
-    "@types/node": "20.11.5",
-    "@types/react": "18.2.48",
-    "@types/react-dom": "18.2.18",
-    "eslint": "^9.8.0",
+    "@types/node": "22.2.0",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "eslint": "^9.9.0",
     "prettier": "^3.3.3",
-    "typescript": "5.3.3",
-    "typescript-eslint": "^8.0.0"
+    "typescript": "5.5.4",
+    "typescript-eslint": "^8.0.1"
+  },
+  "packageManager": "pnpm@9.5.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elwood-studio/elwood.git"
   }
 }

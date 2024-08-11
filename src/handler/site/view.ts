@@ -13,14 +13,16 @@ export async function handler(
   const shows = await ctx.var.db.elwood.query.selectFrom("studio_node")
     .selectAll().where("category", "=", "SHOW").execute();
 
+  const show = shows[0]!;
+
   return ctx.json({
     site: {
       active: true,
-      layout: "network",
-      name: "My Site",
-      description: "This is my site",
+      layout: "show",
+      name: show.content.title,
+      description: show.content.description,
       artwork: "https://placehold.co/600",
-      main_node_id: "1",
+      main_node_id: show.id,
       meta: {
         title: "podcast",
         description: "podcast",

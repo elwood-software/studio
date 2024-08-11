@@ -16,6 +16,12 @@ export const schema = z.object({
   success_url: z.string().url().optional(),
 });
 
+export const noUserSchema = z.object({
+  first_name: z.string(),
+  last_name: z.string(),
+  email: z.string().email(),
+});
+
 type Schema = z.infer<typeof schema>;
 
 export async function handler(
@@ -36,6 +42,13 @@ export async function handler(
     return_url,
     success_url,
   } = (await ctx.req.json()) as Schema;
+
+  // if no user is given, we need to parse the data
+  // tio make syre we have the required fields
+  // for creating a customer
+  if (!sub) {
+    noUserSchema.parse({ first_name, last_name, email });
+  }
 
   // get the plan and make sure it is active
   const plan = await db.elwood.query.selectFrom("studio_plan")

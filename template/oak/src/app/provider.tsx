@@ -6,6 +6,7 @@ import {
   AppContextProvider,
   type AppContextProviderProps,
 } from '@/hooks/use-app-context';
+import {PlayControllerProvider} from '@/hooks/use-play-controller';
 
 export type ProviderProps = AppContextProviderProps;
 
@@ -23,7 +24,9 @@ export function Provider(props: PropsWithChildren<AppContextProviderProps>) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContextProvider {...props}>{props.children}</AppContextProvider>
+      <AppContextProvider {...props}>
+        <PlayControllerProvider>{props.children}</PlayControllerProvider>
+      </AppContextProvider>
     </QueryClientProvider>
   );
 }

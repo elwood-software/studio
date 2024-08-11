@@ -2,7 +2,10 @@ import {ZodError} from 'zod';
 import {headers} from 'next/headers';
 import {createClient} from '@/utils/supabase/server';
 
-export async function serverFetch(url: string, init: RequestInit) {
+import type {JsonObject} from '@/types';
+import type {FetcherRequestInit} from '@/data/api';
+
+export async function serverFetch(url: string, init: FetcherRequestInit) {
   const client = createClient();
   const h = headers();
   const origin = h.get('x-forwarded-host') ?? h.get('host') ?? '';
@@ -28,7 +31,7 @@ export async function serverFetch(url: string, init: RequestInit) {
 
   const body = (await response.json()) as {
     success: boolean;
-    error: any;
+    error: JsonObject;
   };
 
   if (!body.success && body.error?.issues) {
@@ -43,5 +46,5 @@ export async function serverFetch(url: string, init: RequestInit) {
     throw new Error('Failed to fetch for unknown reason');
   }
 
-  return body as any;
+  return body as JsonObject;
 }

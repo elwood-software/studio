@@ -9,7 +9,9 @@ import {useAppContext} from '@/hooks/use-app-context';
 import {useSubscriptions} from '@/data/use-subscription';
 import {useEntitlements} from '@/data/use-entitlements';
 import {Spinner} from '@/components/spinner';
-import {Card, CardHeader, CardContent, CardFooter} from '@/components/ui/card';
+import {Card, CardHeader, CardContent} from '@/components/ui/card';
+
+export const dynamic = 'force-dynamic';
 
 export type PageProps = {
   searchParams: {

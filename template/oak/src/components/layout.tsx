@@ -16,7 +16,8 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
-import {LayoutPlayer} from './layout-player';
+import {MinPlayer} from './player/mini';
+import {usePlayController} from '@/hooks/use-play-controller';
 
 export type LayoutProps = {
   sidebar: ReactNode;
@@ -24,6 +25,7 @@ export type LayoutProps = {
 
 export function Layout(props: PropsWithChildren<LayoutProps>) {
   const [{isAuthenticated, user, site}] = useAppContext();
+  const playerController = usePlayController();
   const [ready, setReady] = useState(isAuthenticated !== null);
 
   useEffect(() => {
@@ -104,11 +106,13 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
             </div>
           </div>
         </header>
-        <div className="size-full grid grid-rows-[1fr_minmax(auto,_80px)]">
+        <div className="size-full grid grid-rows-[1fr_minmax(auto,_max-content)]">
           <div className="flex-grow size-full overflow-y-auto overscroll-auto">
             {props.children}
           </div>
-          <LayoutPlayer />
+          {playerController.currentId && (
+            <MinPlayer className="border-t py-6 px-6" />
+          )}
         </div>
       </div>
     </div>

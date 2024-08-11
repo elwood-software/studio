@@ -1,70 +1,31 @@
 'use client';
 
-import {PlayIcon} from 'lucide-react';
+import {PlayIcon, PauseIcon} from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from '@/components/ui/carousel';
-import {randomUUID} from 'crypto';
+
 import {MouseEvent} from 'react';
 import {usePlayController} from '@/hooks/use-play-controller';
+import {Episode} from '@/types';
+import {useEpisodes} from '@/data/use-episodes';
+import {EpisodesFilter} from '@/data/api';
+import Link from 'next/link';
 
-const episodes = [
-  {
-    id: 'a',
-    number: 1,
-    title: 'Episode Title',
-    description:
-      'He’s going to need you to go ahead and come in on Saturday, but there’s a lot more to the story than you think.',
-    date: new Date(),
-  },
-  {
-    id: 'b',
-    number: 2,
-    title: 'Episode Title',
-    description:
-      'He’s going to need you to go ahead and come in on Saturday, but there’s a lot more to the story than you think.',
-    date: new Date(),
-  },
-  {
-    id: 'c',
-    number: 2,
-    title: 'Episode Title',
-    description:
-      'He’s going to need you to go ahead and come in on Saturday, but there’s a lot more to the story than you think.',
-    date: new Date(),
-  },
-  {
-    id: 'aa',
-    number: 1,
-    title: 'Episode Title',
-    description:
-      'He’s going to need you to go ahead and come in on Saturday, but there’s a lot more to the story than you think.',
-    date: new Date(),
-  },
-  {
-    id: 'bb',
-    number: 2,
-    title: 'Episode Title',
-    description:
-      'He’s going to need you to go ahead and come in on Saturday, but there’s a lot more to the story than you think.',
-    date: new Date(),
-  },
-  {
-    id: 'cc',
-    number: 2,
-    title: 'Episode Title',
-    description:
-      'He’s going to need you to go ahead and come in on Saturday, but there’s a lot more to the story than you think.',
-    date: new Date(),
-  },
-];
+export type ShowPageProps = {
+  episodes: {
+    filter: EpisodesFilter;
+    initialData: Episode[];
+  };
+};
 
-export function ShowPage(): JSX.Element {
+export function ShowPage(props: ShowPageProps): JSX.Element {
   const playController = usePlayController();
+  const {data} = useEpisodes(props.episodes.filter, {
+    initialData: props.episodes.initialData,
+  });
 
   function onPlayPauseClick(id: string, e: MouseEvent) {
     e.preventDefault();
@@ -74,7 +35,7 @@ export function ShowPage(): JSX.Element {
       return;
     }
 
-    playController.play(id);
+    playController.start(id);
   }
 
   return (
@@ -119,22 +80,39 @@ export function ShowPage(): JSX.Element {
           <h3 className="text-muted-foreground">Listen now</h3>
         </header>
         <div className="space-y-6 overflow-y-auto">
-          {episodes.map(episode => (
+          {Array.from(data ?? []).map(episode => (
             <div className="pt-6" key={`ShowPage-Episode-${episode.id}`}>
               <time className="text-muted-foreground font-medium text-xs uppercase">
-                {episode.date.toDateString()}
+                {new Date(episode.published_at).toDateString()}
               </time>
 
               <h4 className="font-bold mt-2 mb-1">
-                {episode.number}. {episode.title}
+                <Link href={`/${episode.show_id}/episode/${episode.id}`}>
+                  {episode.number ? `${episode.number}. ` : ''}
+                  {episode.title}
+                </Link>
               </h4>
-              <p className="text-sm text-foreground/75 mb-3">
-                {episode.description}
-              </p>
+              <p
+                className="text-sm text-foreground/75 mb-3"
+                dangerouslySetInnerHTML={{__html: episode.description}}></p>
               <button
                 onClick={e => onPlayPauseClick(episode.id, e)}
                 className="flex items-center space-x-1 font-bold text-xs uppercase text-accent-foreground text-brand hover:text-underline">
-                <PlayIcon className="size-[0.9em]" />
+                {playController.currentId === episode.id && (
+                  <>
+                    {playController.playing === true && (
+                      <PauseIcon className="size-[1em] fill-current" />
+                    )}
+                    {playController.playing === false && (
+                      <PlayIcon className="size-[1em] fill-current" />
+                    )}
+                  </>
+                )}
+
+                {playController.currentId !== episode.id && (
+                  <PlayIcon className="size-[1em] fill-current" />
+                )}
+
                 <span>Listen</span>
               </button>
             </div>

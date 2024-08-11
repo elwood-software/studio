@@ -1,6 +1,21 @@
-import type {Supabase, Plan, Subscription, Entitlement, Site} from '@/types';
+import type {
+  Supabase,
+  Plan,
+  Subscription,
+  Entitlement,
+  Site,
+  JsonObject,
+  Episode,
+} from '@/types';
 
-export type Fetcher = (url: string, init: RequestInit) => Promise<any>;
+export type FetcherRequestInit = Omit<RequestInit, 'body'> & {
+  body?: JsonObject;
+};
+
+export type Fetcher = (
+  url: string,
+  init: FetcherRequestInit,
+) => Promise<JsonObject>;
 
 export type SubscriptionsFilter = {
   plan_id?: string;
@@ -8,6 +23,11 @@ export type SubscriptionsFilter = {
 
 export type EntitlementsFilter = {
   subscription_id?: string;
+};
+
+export type EpisodesFilter = {
+  show_id?: string;
+  category?: 'PUBLIC' | 'PRIVATE';
 };
 
 export class Api {
@@ -19,7 +39,7 @@ export class Api {
     client: Supabase.SupabaseClient | undefined | null = undefined,
   ) {
     const baseUrl = process.env.NEXT_PUBLIC_STUDIO_API;
-    return new Api(async (url: RequestInfo, init: RequestInit) => {
+    return new Api(async (url: RequestInfo, init: FetcherRequestInit) => {
       const headers_ = new Headers({
         ...init.headers,
         'x-origin': window.location.host,
@@ -37,7 +57,7 @@ export class Api {
       const response = await fetch(`${baseUrl}${url}`, {
         ...init,
         headers: headers_,
-      });
+      } as RequestInit);
       return await response.json();
     });
   }
@@ -47,6 +67,7 @@ export class Api {
   async site(): Promise<Site> {
     const {site} = await this.fetch_('/site', {
       method: 'GET',
+      next: {revalidate: 1000 * 4},
     });
 
     return site;
@@ -60,7 +81,7 @@ export class Api {
     return plans;
   }
 
-  async createCustomer(body: any, headers: Record<string, string> = {}) {
+  async createCustomer(body: JsonObject, headers: Record<string, string> = {}) {
     return await this.fetch_('/customer', {
       method: 'POST',
       headers: {
@@ -96,5 +117,16 @@ export class Api {
     );
 
     return entitlements ?? [];
+  }
+
+  async episodes(filter: EpisodesFilter): Promise<Episode[]> {
+    const {episodes} = await this.fetch_(
+      `/episode?${new URLSearchParams(filter).toString()}`,
+      {
+        method: 'GET',
+      },
+    );
+
+    return episodes ?? [];
   }
 }

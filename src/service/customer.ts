@@ -25,6 +25,8 @@ export async function create(
   const stripeAccountIid = await getStripeAccountId(input.instanceId);
   const supabase = createServiceSupabaseClient();
 
+  assert(input.userId || input.email, "userId or email is required");
+
   return await db.connection.transaction().execute(async (tx_) => {
     const tx = tx_.withSchema("elwood");
     const name = [input.firstName, input.lastName].join(" ");
@@ -48,6 +50,7 @@ export async function create(
       let user = await authDb
         .selectFrom("users")
         .select("id")
+        .select("email")
         .$if(!!input.userId, (qb) => qb.where("id", "=", input.userId!))
         .$if(!!input.email, (qb) => qb.where("email", "=", input.email!))
         .where("instance_id", "=", input.instanceId)
@@ -75,13 +78,16 @@ export async function create(
 
         user = {
           id: createUserResult.data.user.id,
+          email: createUserResult.data.user.email as string,
         };
       }
+
+      assert(user.email, "User email must be provided to create a customer");
 
       customer = await tx.insertInto("studio_customer")
         .values({
           instance_id: input.instanceId,
-          email: input.email,
+          email: user.email,
           user_id: user.id,
           metadata: {
             name,
@@ -97,7 +103,7 @@ export async function create(
 
     if (!stripeCustomerId) {
       const stripeCustomer = await ctx.stripe.customers.create({
-        email: input.email,
+        email: customer.email,
         name: name,
         metadata: {
           customer_id: customer.id,

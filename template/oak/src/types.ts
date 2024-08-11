@@ -3,6 +3,10 @@ import type {SupabaseClient, User, Session} from '@supabase/supabase-js';
 
 export type * as Supabase from '@supabase/supabase-js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Json = any;
+export type JsonObject = Record<string, Json>;
+
 export type AppState = {
   client: SupabaseClient | null;
   isAuthenticated: boolean | null;
@@ -51,7 +55,6 @@ export type CheckoutActionState = {
   success: boolean;
   redirect_url?: string;
   errors?: string[];
-  loading: boolean;
 };
 
 export type CheckoutActionData = {
@@ -89,4 +92,17 @@ export type Site = {
     name: string;
     artwork: string;
   }>;
+};
+
+export type Episode = {
+  id: string;
+  title: string;
+  description: string;
+  artwork: string;
+  audio_url: string;
+  published_at: string;
+  duration: number;
+  show_id: string;
+  number: string | null;
+  category: 'PUBLIC' | 'PRIVATE';
 };

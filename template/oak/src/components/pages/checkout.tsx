@@ -31,6 +31,7 @@ import {Spinner} from '@/components/spinner';
 import {useAppContext} from '@/hooks/use-app-context';
 
 import type {CheckoutActionData, CheckoutActionState} from '@/types';
+import {useState} from 'react';
 
 export type CheckoutPageProps = {
   plan: Plan;
@@ -43,12 +44,10 @@ export type CheckoutPageProps = {
 
 export function CheckoutPage(props: CheckoutPageProps) {
   const router = useRouter();
-  const [state, formAction_] = useFormState<
-    CheckoutActionState,
-    CheckoutActionData
-  >(props.formAction, {
-    loading: false,
+  const [loading, setLoading] = useState(false);
+  const [state, setFormState] = useState<CheckoutActionState>({
     success: false,
+    errors: [],
   });
   const {plan, price} = props;
   const [{isAuthenticated, user}] = useAppContext();
@@ -64,19 +63,21 @@ export function CheckoutPage(props: CheckoutPageProps) {
     },
   });
 
-  const formAction = formAction_ as unknown as (data: FormData) => void;
-
   const onSubmit: SubmitHandler<CheckoutForm> = async function onSubmit(
     data,
     e,
   ) {
     e?.preventDefault();
+    setLoading(true);
 
-    formAction_({
+    const nextState = await props.formAction(state, {
       ...data,
       price_id: price.id,
       plan_id: plan.id,
     });
+
+    setFormState(nextState);
+    setLoading(false);
   };
 
   function onPriceChange(nextPrice: string) {
@@ -85,12 +86,11 @@ export function CheckoutPage(props: CheckoutPageProps) {
     );
   }
 
-  console.log(form.formState.errors);
+  const isLoading = loading || form.formState.isSubmitting;
 
   return (
     <Form {...form}>
       <form
-        action={formAction as unknown as (data: FormData) => void}
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex flex-col items-center justify-center size-full">
         <Card className="w-full max-w-[50%]">
@@ -191,11 +191,11 @@ export function CheckoutPage(props: CheckoutPageProps) {
 
           <CardFooter className="bg-muted pt-6 rounded-b-lg flex flex-col items-center border-t">
             <Button
-              disabled={state.loading || form.formState.isSubmitting}
+              disabled={isLoading}
               type="submit"
               className="w-full"
               autoFocus={isAuthenticated === false}>
-              {state.loading || form.formState.isSubmitting ? (
+              {isLoading ? (
                 <Spinner className="size-[0.9em]" />
               ) : (
                 <>
