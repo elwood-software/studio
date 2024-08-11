@@ -6,6 +6,8 @@ import type {
   Site,
   JsonObject,
   Episode,
+  ApiGetPlaybackUrlInput,
+  ApiGetPlaybackUrlResult,
 } from '@/types';
 
 export type FetcherRequestInit = Omit<RequestInit, 'body'> & {
@@ -128,5 +130,22 @@ export class Api {
     );
 
     return episodes ?? [];
+  }
+
+  async episode(id: string): Promise<Episode | undefined> {
+    const {episode} = await this.fetch_(`/episode/${id}`, {
+      method: 'GET',
+    });
+
+    return episode ?? undefined;
+  }
+
+  async getPlaybackUrl(
+    input: ApiGetPlaybackUrlInput,
+  ): Promise<ApiGetPlaybackUrlResult> {
+    const baseUrl = process.env.NEXT_PUBLIC_STUDIO_API;
+    const authHeader = (await input.client?.auth.getSession())?.data.session
+      ?.access_token;
+    return {url: `${baseUrl}/play/${input.id}?token=${authHeader}`};
   }
 }

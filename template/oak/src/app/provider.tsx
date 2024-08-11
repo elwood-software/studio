@@ -2,11 +2,15 @@
 
 import {useState, type PropsWithChildren} from 'react';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+
 import {
   AppContextProvider,
   type AppContextProviderProps,
 } from '@/hooks/use-app-context';
-import {PlayControllerProvider} from '@/hooks/use-play-controller';
+import {
+  AudioPlayerControlProvider,
+  VideoPlayerControlProvider,
+} from '@/hooks/use-player-control';
 
 export type ProviderProps = AppContextProviderProps;
 
@@ -25,7 +29,11 @@ export function Provider(props: PropsWithChildren<AppContextProviderProps>) {
   return (
     <QueryClientProvider client={queryClient}>
       <AppContextProvider {...props}>
-        <PlayControllerProvider>{props.children}</PlayControllerProvider>
+        <AudioPlayerControlProvider>
+          <VideoPlayerControlProvider>
+            {props.children}
+          </VideoPlayerControlProvider>
+        </AudioPlayerControlProvider>
       </AppContextProvider>
     </QueryClientProvider>
   );

@@ -18,7 +18,7 @@ export function useEpisodes(
 
   return useQuery({
     ...options,
-    queryKey: ['entitlements'],
+    queryKey: ['episodes'],
     queryFn: () => Api.client(client).episodes(filter),
   });
 }

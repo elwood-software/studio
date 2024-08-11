@@ -28,3 +28,32 @@ export function formatHumanTime(seconds: number) {
     m === 1 ? '' : 's'
   }, ${s} second${s === 1 ? '' : 's'}`;
 }
+interface Dimensions {
+  width: number;
+  height: number;
+}
+
+export function resizeMaintainAspectRatio(
+  originalWidth: number,
+  originalHeight: number,
+  newWidth?: number,
+  newHeight?: number,
+): Dimensions {
+  if (newWidth && !newHeight) {
+    const aspectRatio = originalHeight / originalWidth;
+    return {
+      width: newWidth,
+      height: newWidth * aspectRatio,
+    };
+  } else if (newHeight && !newWidth) {
+    const aspectRatio = originalWidth / originalHeight;
+    return {
+      width: newHeight * aspectRatio,
+      height: newHeight,
+    };
+  } else {
+    throw new Error(
+      'You must provide either newWidth or newHeight, but not both.',
+    );
+  }
+}

@@ -16,7 +16,7 @@ import {
 } from 'react-aria';
 
 import {cn, formatHumanTime, parseTime, formatTime} from '@/lib/utils';
-import {usePlayController} from '@/hooks/use-play-controller';
+import {usePlayerControl} from '@/hooks/use-player-control';
 
 export type PlayerScrubberProps = {
   className?: string;
@@ -25,7 +25,7 @@ export type PlayerScrubberProps = {
 
 export function PlayerScrubber(props: PlayerScrubberProps) {
   const wasPlayingRef = useRef(false);
-  const controller = usePlayController();
+  const {active: controller} = usePlayerControl();
   const [currentTime, setCurrentTime] = useState<number | null>(
     controller.currentTime,
   );
@@ -37,6 +37,7 @@ export function PlayerScrubber(props: PlayerScrubberProps) {
   const sliderProps: SliderStateOptions<Array<number>> & {
     onChangeStart?: () => void;
   } = {
+    label: props.label ?? 'Slider',
     maxValue: controller.duration,
     step: 1,
     value: [currentTime ?? controller.currentTime],
@@ -96,7 +97,7 @@ export function ScrubberTrack(props: ScrubberTrackProps) {
               'h-2 md:rounded-l-xl md:rounded-r-md transition-all',
               isFocusVisible || state.isThumbDragging(0)
                 ? 'bg-slate-900'
-                : 'bg-slate-700',
+                : 'bg-foreground',
             )}
             style={{
               width:

@@ -1,8 +1,16 @@
 'use client';
 
 import {PropsWithChildren, ReactNode, useEffect, useState} from 'react';
-
 import {default as Link} from 'next/link';
+import {
+  SunIcon,
+  HeadphonesIcon,
+  LandmarkIcon,
+  LogOutIcon,
+  CircleHelpIcon,
+  CircleUserIcon,
+} from 'lucide-react';
+
 import {Button} from '@/components/ui/button';
 import {useAppContext} from '@/hooks/use-app-context';
 import {cn} from '@/lib/utils';
@@ -17,15 +25,15 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import {MinPlayer} from './player/mini';
-import {usePlayController} from '@/hooks/use-play-controller';
+import {usePlayerControl} from '@/hooks/use-player-control';
 
 export type LayoutProps = {
   sidebar: ReactNode;
 };
 
 export function Layout(props: PropsWithChildren<LayoutProps>) {
-  const [{isAuthenticated, user, site}] = useAppContext();
-  const playerController = usePlayController();
+  const [{isAuthenticated, site, theme}] = useAppContext();
+  const playerControl = usePlayerControl();
   const [ready, setReady] = useState(isAuthenticated !== null);
 
   useEffect(() => {
@@ -69,39 +77,87 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
                 </>
               )}
               {isAuthenticated === true && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost">Hello {user?.email}</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    <DropdownMenuItem>
-                      <Link href="/account/profile">Profile</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link href="/account/billing">Subscription</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Appearance</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuRadioGroup
-                      value={'dark'}
-                      onValueChange={() => {}}>
-                      <DropdownMenuRadioItem value="light">
-                        Light
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="dark">
-                        Dark
-                      </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="system">
-                        System
-                      </DropdownMenuRadioItem>
-                    </DropdownMenuRadioGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Link href="/logout">Log Out</Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                  <Button asChild variant="outline">
+                    <Link
+                      href="/listen"
+                      className="flex items-center space-x-2.5">
+                      <HeadphonesIcon className="size-[1rem]" />
+                      <span className="sr-only">Subscriptions</span>
+                    </Link>
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <CircleUserIcon className="size-[1rem]" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 mr-3">
+                      <DropdownMenuItem>
+                        <Link
+                          href="/account/subscriptions"
+                          className="flex items-center space-x-2.5">
+                          <HeadphonesIcon className="size-[1rem] text-muted-foreground" />
+                          <span>Subscriptions</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Link
+                          href="/account/profile"
+                          className="flex items-center space-x-2.5">
+                          <CircleUserIcon className="size-[1rem] text-muted-foreground" />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Link
+                          href="/account/billing"
+                          className="flex items-center space-x-2.5">
+                          <LandmarkIcon className="size-[1rem] text-muted-foreground" />
+                          <span>Billing</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="flex items-center space-x-2.5">
+                        <SunIcon className="size-[1rem] text-muted-foreground" />
+                        <span>Appearance</span>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuRadioGroup
+                        value={theme?.theme}
+                        onValueChange={value => {
+                          theme?.setTheme(value);
+                        }}>
+                        <DropdownMenuRadioItem value="light">
+                          Light
+                        </DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="dark">
+                          Dark
+                        </DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="system">
+                          System
+                        </DropdownMenuRadioItem>
+                      </DropdownMenuRadioGroup>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Link
+                          href="/logout"
+                          className="flex items-center space-x-2.5">
+                          <CircleHelpIcon className="size-[1rem] text-muted-foreground" />
+                          <span>Support</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Link
+                          href="/logout"
+                          className="flex items-center space-x-2.5">
+                          <LogOutIcon className="size-[1rem] text-muted-foreground" />
+                          <span>Log Out</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               )}
             </div>
           </div>
@@ -110,7 +166,7 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
           <div className="flex-grow size-full overflow-y-auto overscroll-auto">
             {props.children}
           </div>
-          {playerController.currentId && (
+          {playerControl.active.currentId && (
             <MinPlayer className="border-t py-6 px-6" />
           )}
         </div>

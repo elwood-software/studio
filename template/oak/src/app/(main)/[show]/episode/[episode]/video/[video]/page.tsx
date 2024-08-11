@@ -1,3 +1,5 @@
+import {VideoPage} from '@/components/pages/video';
+
 export default async function Page() {
-  return <div>Video</div>;
+  return <VideoPage />;
 }

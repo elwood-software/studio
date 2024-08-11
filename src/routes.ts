@@ -3,7 +3,7 @@ import type { HandlerContextVariables } from "@/types.ts";
 import { isAuthenticated, isRole } from "@/lib/is-role.ts";
 import { Roles } from "@/constants.ts";
 
-import * as viewFeedHandler from "@/handler/feed/view.ts";
+import * as viewFeedHandler from "./handler/feed/view.ts";
 import * as createSubscribeHandler from "@/handler/subscription/create.ts";
 import * as createCustomerHandler from "@/handler/customer/create.ts";
 import * as updateSubscriptionEntitlementsHandler from "@/handler/subscription/update-entitlements.ts";
@@ -15,6 +15,8 @@ import * as planListHandler from "@/handler/plan/list.ts";
 import * as listSubscriptionsHandler from "@/handler/subscription/list.ts";
 import * as viewSiteHandler from "@/handler/site/view.ts";
 import * as listEpisodesHandler from "@/handler/episode/list.ts";
+import * as viewEpisodeHandler from "@/handler/episode/view.ts";
+import * as nodePlayHandler from "@/handler/play/node.ts";
 
 export function registerRoutes(
   app: Hono<{ Variables: HandlerContextVariables }>,
@@ -35,6 +37,12 @@ export function registerRoutes(
     "/episode",
     zValidator("query", listEpisodesHandler.schema),
     listEpisodesHandler.handler,
+  );
+
+  app.get(
+    "/episode/:id",
+    zValidator("param", viewEpisodeHandler.schema),
+    viewEpisodeHandler.handler,
   );
 
   app.get(
@@ -63,6 +71,12 @@ export function registerRoutes(
   app.get(
     "/plan",
     planListHandler.handler,
+  );
+
+  app.get(
+    "/play/:id",
+    zValidator("param", nodePlayHandler.schema),
+    nodePlayHandler.handler,
   );
 
   //

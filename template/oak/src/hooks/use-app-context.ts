@@ -5,6 +5,7 @@ import React, {
   type PropsWithChildren,
   useEffect,
 } from 'react';
+import {useTheme} from 'next-themes';
 
 import {createClient} from '@/utils/supabase/client';
 import {
@@ -21,6 +22,7 @@ const defaultValue: AppState = {
   user: null,
   session: null,
   site: null,
+  theme: null,
 };
 
 const AppContext = createContext<AppContextValue>([
@@ -36,6 +38,7 @@ export type AppContextProviderProps = {
 export function AppContextProvider(
   props: PropsWithChildren<AppContextProviderProps>,
 ): JSX.Element {
+  const theme = useTheme();
   const [state, dispatch] = useReducer<Reducer<AppState, AppContextAction>>(
     appContextReducer,
     {
@@ -45,8 +48,16 @@ export function AppContextProvider(
       site: props.site,
       user: props.session?.user || null,
       session: props.session,
+      theme,
     },
   );
+
+  useEffect(() => {
+    dispatch({
+      type: 'SET_THEME',
+      value: theme,
+    });
+  }, [theme.theme]);
 
   useEffect(() => {
     let onAuthStateChangeSubscription: Supabase.Subscription | null = null;
@@ -101,7 +112,11 @@ export function appContextReducer(
         user: action.value.user,
         session: action.value.session,
       };
-
+    case 'SET_THEME':
+      return {
+        ...state,
+        theme: action.value,
+      };
     default:
       return state;
   }

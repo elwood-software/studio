@@ -39,8 +39,6 @@ export async function handler(
     });
   }
 
-  console.log(nodes);
-
   return ctx.json({
     episodes: nodes,
   });

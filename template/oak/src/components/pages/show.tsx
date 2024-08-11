@@ -1,18 +1,18 @@
 'use client';
 
+import {type MouseEvent} from 'react';
 import {PlayIcon, PauseIcon} from 'lucide-react';
+import Link from 'next/link';
+
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
-
-import {MouseEvent} from 'react';
-import {usePlayController} from '@/hooks/use-play-controller';
+import {usePlayerControl} from '@/hooks/use-player-control';
 import {Episode} from '@/types';
 import {useEpisodes} from '@/data/use-episodes';
 import {EpisodesFilter} from '@/data/api';
-import Link from 'next/link';
 
 export type ShowPageProps = {
   episodes: {
@@ -22,7 +22,7 @@ export type ShowPageProps = {
 };
 
 export function ShowPage(props: ShowPageProps): JSX.Element {
-  const playController = usePlayController();
+  const {startAudio, audio: playerControl} = usePlayerControl();
   const {data} = useEpisodes(props.episodes.filter, {
     initialData: props.episodes.initialData,
   });
@@ -30,12 +30,12 @@ export function ShowPage(props: ShowPageProps): JSX.Element {
   function onPlayPauseClick(id: string, e: MouseEvent) {
     e.preventDefault();
 
-    if (playController.playing && playController.currentId === id) {
-      playController.pause();
+    if (playerControl.playing && playerControl.currentId === id) {
+      playerControl.pause();
       return;
     }
 
-    playController.start(id);
+    startAudio(id);
   }
 
   return (
@@ -48,10 +48,10 @@ export function ShowPage(props: ShowPageProps): JSX.Element {
         <Carousel className="mx-0 mt-6">
           <CarouselContent>
             <CarouselItem className="basis-1/3">
-              <a href="/podcast/asdasd/episode/asdasd/video/asdasd">
+              <Link href="/show-id/episode/episode-id/video/video-id">
                 <img src="https://placehold.co/600x400" />
                 <h3>Poop</h3>
-              </a>
+              </Link>
             </CarouselItem>
             <CarouselItem className="basis-1/3">
               <a href="/epsiode/asdadasd">
@@ -92,24 +92,30 @@ export function ShowPage(props: ShowPageProps): JSX.Element {
                   {episode.title}
                 </Link>
               </h4>
-              <p
-                className="text-sm text-foreground/75 mb-3"
-                dangerouslySetInnerHTML={{__html: episode.description}}></p>
+
+              <section className="text-sm text-foreground/75 mb-3">
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: episode.description,
+                  }}
+                />
+              </section>
+
               <button
                 onClick={e => onPlayPauseClick(episode.id, e)}
                 className="flex items-center space-x-1 font-bold text-xs uppercase text-accent-foreground text-brand hover:text-underline">
-                {playController.currentId === episode.id && (
+                {playerControl.currentId === episode.id && (
                   <>
-                    {playController.playing === true && (
+                    {playerControl.playing === true && (
                       <PauseIcon className="size-[1em] fill-current" />
                     )}
-                    {playController.playing === false && (
+                    {playerControl.playing === false && (
                       <PlayIcon className="size-[1em] fill-current" />
                     )}
                   </>
                 )}
 
-                {playController.currentId !== episode.id && (
+                {playerControl.currentId !== episode.id && (
                   <PlayIcon className="size-[1em] fill-current" />
                 )}
 

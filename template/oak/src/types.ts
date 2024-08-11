@@ -1,5 +1,6 @@
 import type {Dispatch} from 'react';
 import type {SupabaseClient, User, Session} from '@supabase/supabase-js';
+import type {UseThemeProps} from 'next-themes/dist/types';
 
 export type * as Supabase from '@supabase/supabase-js';
 
@@ -13,15 +14,21 @@ export type AppState = {
   user: User | null;
   session: Session | null;
   site: Site | null;
+  theme: UseThemeProps | null;
 };
 
-export type AppContextAction = {
-  type: 'SET_AUTHENTICATED';
-  value: {
-    user: User | null;
-    session: Session | null;
-  };
-};
+export type AppContextAction =
+  | {
+      type: 'SET_AUTHENTICATED';
+      value: {
+        user: User | null;
+        session: Session | null;
+      };
+    }
+  | {
+      type: 'SET_THEME';
+      value: UseThemeProps;
+    };
 
 export type AppContextValue = [AppState, Dispatch<AppContextAction>];
 
@@ -105,4 +112,13 @@ export type Episode = {
   show_id: string;
   number: string | null;
   category: 'PUBLIC' | 'PRIVATE';
+};
+
+export type ApiGetPlaybackUrlInput = {
+  client?: SupabaseClient | null;
+  id: string;
+};
+
+export type ApiGetPlaybackUrlResult = {
+  url: string;
 };

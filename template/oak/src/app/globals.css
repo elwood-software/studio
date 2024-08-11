@@ -65,9 +65,19 @@
   }
   html,
   body {
-    @apply min-h-max h-full w-screen;
+    @apply w-screen h-screen;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .video-container {
+    max-width: calc((100vh - 56px - 24px - 136px) * (16 / 9));
+    min-width: calc(360px * (16 / 9));
+  }
+  .video-container-inner {
+    padding-top: calc(9 / 16 * 100%);
   }
 }

@@ -3,7 +3,7 @@
 import {PauseIcon, PlayIcon} from 'lucide-react';
 
 import {cn} from '@/lib/utils';
-import {usePlayController} from '@/hooks/use-play-controller';
+import {usePlayerControl} from '@/hooks/use-player-control';
 
 export type PlayerButtonProps = {
   type: 'play-pause' | 'forward' | 'back';
@@ -12,7 +12,8 @@ export type PlayerButtonProps = {
 };
 
 export function PlayerButton(props: PlayerButtonProps) {
-  const {play, pause, currentId, playing} = usePlayController();
+  const {active} = usePlayerControl();
+  const {play, pause, currentId, playing} = active;
   const wantToPlayId = props.id ?? currentId ?? '';
 
   switch (props.type) {
