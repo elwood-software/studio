@@ -1,11 +1,14 @@
 import {PropsWithChildren} from 'react';
-
+import {ThemeProvider} from 'next-themes';
 import {GeistSans} from 'geist/font/sans';
+
 import './globals.css';
-import {Provider, type ProviderProps} from './provider';
+
+import {Provider} from './provider';
 import {createClient} from '@/utils/supabase/server';
 import {Api} from '@/data/api';
 import {serverFetch} from '@/lib/server-fetch';
+import {FatalError} from '@/components/pages/fatal-error';
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -24,23 +27,9 @@ export default async function RootLayout(props: PropsWithChildren) {
     const session = await client.auth.getSession();
     const site = await new Api(serverFetch).site();
 
-    if (!site) {
-      return (
-        <Shell>
-          <div>Site Not Found</div>
-        </Shell>
-      );
+    if (!site || site.active !== true) {
+      throw new Error('Site not found');
     }
-
-    if (site.active !== true) {
-      return (
-        <Shell>
-          <div>coming soon</div>
-        </Shell>
-      );
-    }
-
-    console.log(site);
 
     return (
       <Shell>
@@ -50,15 +39,20 @@ export default async function RootLayout(props: PropsWithChildren) {
       </Shell>
     );
   } catch (_err) {
-    return <Shell>500 Error</Shell>;
+    console.error(_err);
+    return (
+      <Shell>
+        <FatalError />
+      </Shell>
+    );
   }
 }
 
 function Shell(props: PropsWithChildren): JSX.Element {
   return (
-    <html lang="en" className={GeistSans.className}>
+    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground overscroll-none">
-        {props.children}
+        <ThemeProvider attribute="class">{props.children}</ThemeProvider>
       </body>
     </html>
   );
