@@ -73,6 +73,11 @@
 }
 
 @layer components {
+  .min-video-container {
+    max-width: calc(320px * (16 / 9));
+    min-width: calc(180px * (16 / 9));
+  }
+
   .video-container {
     max-width: calc((100vh - 56px - 24px - 136px) * (16 / 9));
     min-width: calc(360px * (16 / 9));

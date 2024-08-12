@@ -138,6 +138,8 @@ export function reducer<Type extends MediaType>(
   state: PlayControllerState<Type>,
   action: PlayControllerAction<Type>,
 ): PlayControllerState<Type> {
+  console.log(state.mediaType, action);
+
   switch (action.type) {
     case 'init': {
       return {
@@ -154,6 +156,7 @@ export function reducer<Type extends MediaType>(
     case 'play':
       return {
         ...state,
+        active: true,
         playing: true,
       };
     case 'pause':
@@ -218,7 +221,7 @@ export function PlayerControlProvider<Type extends MediaType>(
         dispatch({type: 'set-current-id', value: id});
         dispatch({type: 'set-current-time', value: 0});
         dispatch({type: 'set-duration', value: 0});
-        ref.current!.src = url;
+        // ref.current!.src = url;
       })
       .catch(() => {
         console.log('ERROR');
@@ -295,6 +298,12 @@ export function PlayerControlProvider<Type extends MediaType>(
     ),
     createElement(props.mediaType, {
       key: `player-controller-${props.mediaType}`,
+      style: {
+        opacity: 0,
+        position: 'fixed',
+        top: '-9999px',
+        left: '-9999px',
+      },
       ref,
       src: 'https://vjs.zencdn.net/v/oceans.mp4',
       onPlay: () => dispatch({type: 'play'}),

@@ -1,6 +1,6 @@
 'use client';
 
-import {PropsWithChildren, ReactNode, useEffect, useState} from 'react';
+import {PropsWithChildren, ReactNode, useRef, useEffect, useState} from 'react';
 import {default as Link} from 'next/link';
 import {
   SunIcon,
@@ -10,6 +10,7 @@ import {
   CircleHelpIcon,
   CircleUserIcon,
 } from 'lucide-react';
+import {useScroll} from 'react-use';
 
 import {Button} from '@/components/ui/button';
 import {useAppContext} from '@/hooks/use-app-context';
@@ -25,7 +26,8 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import {MinPlayer} from './player/mini';
-import {usePlayerControl} from '@/hooks/use-player-control';
+
+import {CustomEventName} from '@/lib/events';
 
 export type LayoutProps = {
   sidebar: ReactNode;
@@ -33,8 +35,17 @@ export type LayoutProps = {
 
 export function Layout(props: PropsWithChildren<LayoutProps>) {
   const [{isAuthenticated, site, theme}] = useAppContext();
-  const playerControl = usePlayerControl();
   const [ready, setReady] = useState(isAuthenticated !== null);
+  const scrollingRef = useRef<HTMLDivElement>(null);
+  const scrollPosition = useScroll(scrollingRef);
+
+  useEffect(() => {
+    document.dispatchEvent(
+      new CustomEvent(CustomEventName.ScrollTargetChange, {
+        detail: [scrollPosition.x, scrollPosition.y],
+      }),
+    );
+  }, [scrollPosition.x, scrollPosition.y]);
 
   useEffect(() => {
     setReady(isAuthenticated !== null);
@@ -163,12 +174,14 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
           </div>
         </header>
         <div className="size-full grid grid-rows-[1fr_minmax(auto,_max-content)]">
-          <div className="flex-grow size-full overflow-y-auto overscroll-auto">
+          <div
+            ref={scrollingRef}
+            className="flex-grow size-full overflow-y-auto overscroll-auto"
+            id="scrolling-target">
             {props.children}
           </div>
-          {playerControl.active.currentId && (
-            <MinPlayer className="border-t py-6 px-6" />
-          )}
+
+          <MinPlayer className="border-t py-6 px-6" />
         </div>
       </div>
     </div>
