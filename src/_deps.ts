@@ -11,6 +11,9 @@ export { jwt as honoJwt, type JwtVariables } from "hono/jwt";
 export { cors } from "hono/cors";
 export { assert } from "@std/assert/assert";
 export { stringify as stringifyYaml } from "@std/yaml/stringify";
+export { parse as parseYaml } from "@std/yaml/parse";
+export * as base64 from "@std/encoding/base64";
+export { basename, dirname, extname } from "@std/path";
 export {
   CompiledQuery,
   Kysely,
@@ -30,7 +33,6 @@ export type {
 
 export { Pool, PoolClient } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 export { Stripe } from "stripe";
-export * as base64 from "@std/encoding/base64";
 export * as supabase from "@supabase/supabase-js";
 export * as jwt from "jsonwebtoken";
 export * as xml from "@libs/xml";

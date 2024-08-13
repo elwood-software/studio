@@ -11,6 +11,7 @@
     "@mikaelporttila/rss": "jsr:@mikaelporttila/rss@^1.1.1",
     "@std/assert": "jsr:@std/assert@^1.0.1",
     "@std/encoding": "jsr:@std/encoding@^1.0.1",
+    "@std/path": "jsr:@std/path@^1.0.2",
     "@std/yaml": "jsr:@std/yaml@^1.0.0",
     "@supabase/supabase-js": "jsr:@supabase/supabase-js@^2.44.4",
     "hono": "npm:hono@^4.5.2",

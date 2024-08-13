@@ -1,24 +1,15 @@
-import type {
-  HandlerContextVariables,
-  JsonObject,
-  StudioWebhook,
-} from "@/types.ts";
+import type { HandlerContextVariables, JsonObject } from "@/types.ts";
 import { _, DBConstant } from "@/_deps.ts";
-import { entitlements, feed, subscription } from "@/service/mod.ts";
+import { entitlements, subscription } from "@/service/mod.ts";
 
-export async function processRow(
-  ctx: HandlerContextVariables,
-  row: StudioWebhook,
-): Promise<string[]> {
-  switch (row.source) {
-    case "stripe":
-      return await processStripe(ctx, row.payload as { body: JsonObject });
-    default: {
-      return ["unknown source", row.source];
-    }
-  }
-}
-
+/**
+ * Process a stripe webhook event
+ * the payload will already have been verified
+ *
+ * @param ctx
+ * @param payload
+ * @returns
+ */
 export async function processStripe(
   ctx: HandlerContextVariables,
   payload: { body: JsonObject },

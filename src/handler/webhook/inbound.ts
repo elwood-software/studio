@@ -1,10 +1,10 @@
-import type { HandlerContext, JsonObject } from "@/types.ts";
-import { assert, DBConstant, z } from "@/_deps.ts";
+import type { HandlerContext, SupabaseWebhookPayload } from "@/types.ts";
+import { assert, DBConstant, extname, z } from "@/_deps.ts";
 import { getStripeWebhookSecret } from "@/lib/stripe.ts";
 import { webhook } from "@/service/mod.ts";
 
 export const schema = z.object({
-  source: z.enum(["stripe"]),
+  source: z.enum(["stripe", "supabase-storage-sync"]),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -12,10 +12,18 @@ type Schema = z.infer<typeof schema>;
 export async function handler(
   ctx: HandlerContext,
 ) {
+  const { processWebhooksOnReceive, syncSupabaseBucketNames } = ctx.get(
+    "settings",
+  );
+
   const { source } = ctx.req.param() as Schema;
   const rawBody = await ctx.req.text();
-  const processOnReceive =
-    Deno.env.get("PROCESS_WEBHOOKS_ON_RECEIVE") === "true";
+  const rawHeaders = Object.create(ctx.req.raw.headers) as Record<
+    string,
+    string
+  >;
+
+  let headers = rawHeaders;
   let reference_id: string = crypto.randomUUID();
   let body = JSON.parse(rawBody);
   let created_at = new Date();
@@ -23,6 +31,51 @@ export async function handler(
   // throw away any errors
   try {
     switch (source) {
+      // SUPABASE
+      case "supabase-storage-sync": {
+        if (!["INSERT", "UPDATE", "DELETE"].includes(body.type)) {
+          throw new Error("Invalid type");
+        }
+
+        // make sure its a bucket we're interested in
+        const body_ = body as SupabaseWebhookPayload.Any<
+          SupabaseWebhookPayload.StorageObjectTableRecord
+        >;
+        const record = body_.type === "DELETE"
+          ? body_.old_record
+          : body_.record;
+
+        if (
+          !record?.bucket_id ||
+          record?.bucket_id &&
+            !syncSupabaseBucketNames.includes(record.bucket_id)
+        ) {
+          throw new Error("Invalid bucket");
+        }
+
+        // is it a file type we care about
+        if (
+          ![
+            ".jpeg",
+            ".jpg",
+            ".gif",
+            ".png",
+            ".mp4",
+            ".mp3",
+            ".yaml",
+            ".yml",
+            ".json",
+          ]
+            .includes(extname(record.name).toLocaleLowerCase())
+        ) {
+          throw new Error("Invalid file type");
+        }
+
+        // otherwise keep going
+        break;
+      }
+
+      // STRIPE
       case "stripe": {
         const secret = getStripeWebhookSecret();
 
@@ -44,29 +97,31 @@ export async function handler(
         break;
       }
       default:
-        // do nothing
+        throw new Error(`Unsupported source: ${source}`);
     }
+
+    const payload = { body, headers };
 
     // always add the webhook to the db
     // so we have something trackable
     await ctx.var.db.elwood.query.insertInto("studio_webhook")
       .values({
-        is_processed: processOnReceive,
+        is_processed: processWebhooksOnReceive,
         direction: DBConstant.StudioWebhookDirections.Inbound,
         source,
-        payload: { body },
+        payload,
         reference_id,
         created_at,
       }).execute();
 
     // in dev we want to process requests when they're received
-    if (processOnReceive) {
+    if (processWebhooksOnReceive) {
       await webhook.processRow(ctx.var, {
         id: crypto.randomUUID(),
         is_processed: false,
         direction: DBConstant.StudioWebhookDirections.Inbound,
         source,
-        payload: { body },
+        payload,
         reference_id,
         created_at: new Date(),
       });

@@ -1,17 +1,25 @@
-import { assert, cors, Hono, honoJwt, type Next } from "@/_deps.ts";
-import { HandlerContextVariables } from "@/types.ts";
-import { connectDatabase } from "@/lib/connect-database.ts";
+import { cors, Hono, honoJwt, type Next } from "@/_deps.ts";
+import type {
+  ConnectDatabaseResult,
+  HandlerContextVariables,
+  Settings,
+} from "@/types.ts";
+
 import { createStripe, getStripeAccountId } from "@/lib/stripe.ts";
 import * as orm from "@/lib/orm.ts";
 import { instanceMiddleware } from "@/lib/instance-id.ts";
 
+export type MiddlewareOptions = {
+  db: ConnectDatabaseResult;
+  jwtSecret: string;
+  settings: Settings;
+};
+
 export function registerMiddleware(
   app: Hono<{ Variables: HandlerContextVariables }>,
+  options: MiddlewareOptions,
 ) {
-  const secret = Deno.env.get("JWT_SECRET");
-  const db = connectDatabase();
-
-  assert(secret, "missing JWT_SECRET");
+  const { db, jwtSecret } = options;
 
   app.use(instanceMiddleware);
   app.use(cors());
@@ -19,7 +27,7 @@ export function registerMiddleware(
     async (ctx, next: Next) => {
       if (ctx.req.header("authorization")) {
         return await honoJwt({
-          secret,
+          secret: jwtSecret,
         })(ctx, next);
       }
 
@@ -35,6 +43,7 @@ export function registerMiddleware(
       );
       c.set("orm", orm.provider(db));
       c.set("userId", userId);
+      c.set("settings", options.settings);
 
       // if there's a user id
       // we need to map it to a customer

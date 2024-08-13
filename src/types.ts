@@ -1,3 +1,4 @@
+import { JsonObject } from "jsr:@elwood/db@^0.0.11/types";
 import type {
   Context,
   ElwoodDatabase,
@@ -15,6 +16,11 @@ import type {
 
 import type { Orm } from "./lib/orm.ts";
 
+export type Settings = {
+  processWebhooksOnReceive: boolean;
+  syncSupabaseBucketNames: string[];
+};
+
 export type HandlerContextVariables = JwtVariables & {
   instanceId: string;
   db: ConnectDatabaseResult;
@@ -22,6 +28,7 @@ export type HandlerContextVariables = JwtVariables & {
   orm: Orm;
   userId: string | undefined;
   customer: StudioCustomer | null | undefined;
+  settings: Settings;
 };
 
 export type HandlerContext<
@@ -53,3 +60,55 @@ export type ConnectDatabaseResult = {
     connection: PublicDatabase;
   };
 };
+
+// deno-lint-ignore no-namespace
+export namespace SupabaseWebhookPayload {
+  export type StorageObjectTableRecord = {
+    "id": string;
+    "name": string;
+    "owner": string | null;
+    "version": string;
+    "metadata": {
+      "eTag": string;
+      "size": number;
+      "mimetype": string;
+      "cacheControl": string;
+      "lastModified": string;
+      "contentLength": number;
+      "httpStatusCode": number;
+    };
+    "owner_id": string | null;
+    "bucket_id": string;
+    "created_at": string;
+    "updated_at": string;
+    "path_tokens": string[];
+    "last_accessed_at": string;
+  };
+
+  export type Insert<T extends JsonObject = JsonObject> = {
+    type: "INSERT";
+    table: string;
+    schema: string;
+    record: T;
+    old_record: null;
+  };
+  export type Update<T extends JsonObject = JsonObject> = {
+    type: "UPDATE";
+    table: string;
+    schema: string;
+    record: T;
+    old_record: T;
+  };
+  export type Delete<T extends JsonObject = JsonObject> = {
+    type: "DELETE";
+    table: string;
+    schema: string;
+    record: null;
+    old_record: T;
+  };
+
+  export type Any<T extends JsonObject = JsonObject> =
+    | Insert<T>
+    | Update<T>
+    | Delete<T>;
+}
