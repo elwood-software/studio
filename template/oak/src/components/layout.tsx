@@ -53,7 +53,7 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
 
   return (
     <div className="w-screen h-screen grid grid-cols-[1fr_4fr]">
-      <div className="bg-muted/50 border-r p-12">
+      <div className="bg-muted/50 border-r p-12 overflow-auto">
         <figure className="mb-6">
           <Link href="/" className="">
             <img src={site?.artwork} className="w-full" />
@@ -69,10 +69,10 @@ export function Layout(props: PropsWithChildren<LayoutProps>) {
 
         {props.sidebar}
       </div>
-      <div className="size-full grid grid-rows-[60px_minmax(0,_1fr)] min-h-1">
+      <div className="size-full grid grid-rows-[70px_minmax(0,_1fr)] min-h-1">
         <header className="flex justify-between border-b">
           <div></div>
-          <div className="flex justify-end items-center px-12">
+          <div className="flex justify-end items-center px-6">
             <div
               className={cn('transition-opacity duration-75 space-x-2', {
                 'opacity-0': !ready,

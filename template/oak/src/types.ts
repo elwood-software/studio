@@ -112,11 +112,14 @@ export type Episode = {
   show_id: string;
   number: string | null;
   category: 'PUBLIC' | 'PRIVATE';
+  audio_playback_license_id: string | null;
+  video_playback_license_id: string | null;
 };
 
 export type ApiGetPlaybackUrlInput = {
   client?: SupabaseClient | null;
-  id: string;
+  node_id: string;
+  playback_license_id: string;
 };
 
 export type ApiGetPlaybackUrlResult = {

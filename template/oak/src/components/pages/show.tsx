@@ -1,7 +1,5 @@
 'use client';
 
-import {type MouseEvent} from 'react';
-import {PlayIcon, PauseIcon} from 'lucide-react';
 import Link from 'next/link';
 
 import {
@@ -9,34 +7,21 @@ import {
   CarouselContent,
   CarouselItem,
 } from '@/components/ui/carousel';
-import {usePlayerControl} from '@/hooks/use-player-control';
+import {MediaType} from '@/hooks/use-player-control';
 import {Episode} from '@/types';
-import {useEpisodes} from '@/data/use-episodes';
-import {EpisodesFilter} from '@/data/api';
+
+import {PlayerButton} from '@/components/player/button';
+import {useShowEpisodes} from '@/data/use-show-episodes';
 
 export type ShowPageProps = {
-  episodes: {
-    filter: EpisodesFilter;
-    initialData: Episode[];
-  };
+  id: string;
+  episodes: Episode[];
 };
 
 export function ShowPage(props: ShowPageProps): JSX.Element {
-  const {startAudio, audio: playerControl} = usePlayerControl();
-  const {data} = useEpisodes(props.episodes.filter, {
-    initialData: props.episodes.initialData,
+  const {data} = useShowEpisodes(props.id, {
+    initialData: props.episodes,
   });
-
-  function onPlayPauseClick(id: string, e: MouseEvent) {
-    e.preventDefault();
-
-    if (playerControl.playing && playerControl.currentId === id) {
-      playerControl.pause();
-      return;
-    }
-
-    startAudio(id);
-  }
 
   return (
     <div className="grid grid-cols-[3fr_1fr] grid-rows-[auto_1fr] size-full">
@@ -80,49 +65,55 @@ export function ShowPage(props: ShowPageProps): JSX.Element {
           <h3 className="text-muted-foreground">Listen now</h3>
         </header>
         <div className="space-y-6 overflow-y-auto">
-          {Array.from(data ?? []).map(episode => (
-            <div className="pt-6" key={`ShowPage-Episode-${episode.id}`}>
-              <time className="text-muted-foreground font-medium text-xs uppercase">
-                {new Date(episode.published_at).toDateString()}
-              </time>
+          {Array.from(data ?? []).map(episode => {
+            return (
+              <div className="pt-6" key={`ShowPage-Episode-${episode.id}`}>
+                <time className="text-muted-foreground font-medium text-xs uppercase">
+                  {new Date(episode.published_at).toDateString()}
+                </time>
 
-              <h4 className="font-bold mt-2 mb-1">
-                <Link href={`/${episode.show_id}/episode/${episode.id}`}>
-                  {episode.number ? `${episode.number}. ` : ''}
-                  {episode.title}
-                </Link>
-              </h4>
+                <h4 className="font-bold mt-2 mb-1">
+                  <Link href={`/${episode.show_id}/episode/${episode.id}`}>
+                    {episode.number ? `${episode.number}. ` : ''}
+                    {episode.title}
+                  </Link>
+                </h4>
 
-              <section className="text-sm text-foreground/75 mb-3">
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: episode.description,
-                  }}
-                />
-              </section>
+                <section className="text-sm text-foreground/90 mb-3">
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: episode.description,
+                    }}
+                  />
+                </section>
 
-              <button
-                onClick={e => onPlayPauseClick(episode.id, e)}
-                className="flex items-center space-x-1 font-bold text-xs uppercase text-accent-foreground text-brand hover:text-underline">
-                {playerControl.currentId === episode.id && (
-                  <>
-                    {playerControl.playing === true && (
-                      <PauseIcon className="size-[1em] fill-current" />
-                    )}
-                    {playerControl.playing === false && (
-                      <PlayIcon className="size-[1em] fill-current" />
-                    )}
-                  </>
-                )}
-
-                {playerControl.currentId !== episode.id && (
-                  <PlayIcon className="size-[1em] fill-current" />
-                )}
-
-                <span>Listen</span>
-              </button>
-            </div>
-          ))}
+                <footer className="flex items-center space-x-3">
+                  {episode.audio_playback_license_id && (
+                    <PlayerButton
+                      className="flex items-center space-x-1 font-bold text-xs uppercase text-muted-foreground hover:text-foreground hover:underline"
+                      type="start-play-pause"
+                      mediaType={MediaType.Audio}
+                      startOptions={{
+                        node_id: episode.id,
+                        playback_license_id: episode.audio_playback_license_id,
+                      }}
+                    />
+                  )}
+                  {episode.video_playback_license_id && (
+                    <PlayerButton
+                      className="flex items-center space-x-1 font-bold text-xs uppercase text-muted-foreground hover:text-foreground hover:underline"
+                      type="start-play-pause"
+                      mediaType={MediaType.Video}
+                      startOptions={{
+                        node_id: episode.id,
+                        playback_license_id: episode.video_playback_license_id,
+                      }}
+                    />
+                  )}
+                </footer>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

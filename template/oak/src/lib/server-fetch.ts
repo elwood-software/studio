@@ -43,7 +43,9 @@ export async function serverFetch(url: string, init: FetcherRequestInit) {
   }
 
   if (!response.ok) {
-    throw new Error('Failed to fetch for unknown reason');
+    throw new Error(
+      `Failed to fetch ("${url}") for unknown reason. Code ${response.status}`,
+    );
   }
 
   return body as JsonObject;

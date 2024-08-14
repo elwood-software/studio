@@ -4,20 +4,32 @@ import {
   createElement,
   useContext,
   useRef,
+  useState,
   Fragment,
   useEffect,
   type Context,
   type RefObject,
   PropsWithChildren,
 } from 'react';
+import {useIsomorphicLayoutEffect} from 'react-use';
+import {create, NanoRenderer} from 'nano-css';
+import {addon as addonCSSOM, CSSOMAddon} from 'nano-css/addon/cssom';
+import {addon as addonVCSSOM, VCSSOMAddon} from 'nano-css/addon/vcssom';
+import {cssToTree} from 'nano-css/addon/vcssom/cssToTree';
 
 import {Api} from '../data/api';
 import {useAppContext} from './use-app-context';
+import type {ApiGetPlaybackUrlInput} from '@/types';
 
-enum MediaType {
+export enum MediaType {
   Video = 'video',
   Audio = 'audio',
 }
+
+type Nano = NanoRenderer & CSSOMAddon & VCSSOMAddon;
+const nano = create() as Nano;
+addonCSSOM(nano);
+addonVCSSOM(nano);
 
 const AudioPlayerContext =
   createContext<PlayController<MediaType.Audio> | null>(null);
@@ -33,10 +45,12 @@ export type PlayControllerState<Type extends MediaType> = {
   mediaType: Type;
   active: boolean;
   currentId: string | null;
+  currentLicense: string | null;
   playing: boolean;
   muted: boolean;
   duration: number;
   currentTime: number;
+  anchorTo: string | null;
 };
 
 const _defaultPlayControllerState: Omit<
@@ -45,10 +59,12 @@ const _defaultPlayControllerState: Omit<
 > = {
   active: false,
   currentId: null,
+  currentLicense: null,
   playing: false,
   muted: false,
   duration: 0,
   currentTime: 0,
+  anchorTo: null,
 };
 
 const defaultAudioPlayerControlState: PlayControllerState<MediaType.Audio> = {
@@ -61,14 +77,27 @@ const defaultVideoPlayerControlState: PlayControllerState<MediaType.Video> = {
   ..._defaultPlayControllerState,
 };
 
+export type PlayerControlStartOptions = Omit<ApiGetPlaybackUrlInput, 'client'>;
+export type PlayerControlPosition = Partial<{
+  top: string;
+  left: string;
+  right: string;
+  width: string;
+  height: string;
+  bottom: string;
+  opacity: string;
+}>;
+
 export type PlayController<Type extends MediaType> =
   PlayControllerState<Type> & {
-    start: (id: string) => void;
+    start: (options: PlayerControlStartOptions) => void;
+    startAsync: (options: PlayerControlStartOptions) => Promise<void>;
     play: () => void;
     pause: () => void;
     stop: () => void;
     seek: (time: number) => void;
-    startAsync: (id: string) => Promise<void>;
+    anchor: (el: HTMLDivElement | null) => void;
+    position(pos: PlayerControlPosition): void;
     ref: RefObject<HTMLAudioElement | HTMLVideoElement> | null;
   };
 export type AudioPlayController = PlayController<MediaType.Audio> & {
@@ -106,8 +135,16 @@ export type PlayControllerAction<Type extends MediaType> =
       value: string;
     }
   | {
+      type: 'set-current-license';
+      value: string;
+    }
+  | {
       type: 'set-active';
       value: boolean;
+    }
+  | {
+      type: 'set-anchor-to';
+      value: string;
     };
 
 export function updateLocalStorageMiddleware<Type extends MediaType>(
@@ -138,7 +175,7 @@ export function reducer<Type extends MediaType>(
   state: PlayControllerState<Type>,
   action: PlayControllerAction<Type>,
 ): PlayControllerState<Type> {
-  console.log(state.mediaType, action);
+  // console.log(state.mediaType, action);
 
   switch (action.type) {
     case 'init': {
@@ -184,6 +221,18 @@ export function reducer<Type extends MediaType>(
         ...state,
         active: action.value,
       };
+    case 'set-current-license': {
+      return {
+        ...state,
+        currentLicense: action.value,
+      };
+    }
+    case 'set-anchor-to': {
+      return {
+        ...state,
+        anchorTo: action.value,
+      };
+    }
     default:
       return state;
   }
@@ -198,6 +247,7 @@ export function PlayerControlProvider<Type extends MediaType>(
   props: PropsWithChildren<PlayerControlProviderProps<Type>>,
 ) {
   const storageKey = `${props.mediaType}-player-state`;
+  const [position, setPosition] = useState<PlayerControlPosition>({});
   const [{client}] = useAppContext();
   const ref = useRef<HTMLAudioElement>(null);
   const [state, dispatch] = useReducer<
@@ -211,17 +261,29 @@ export function PlayerControlProvider<Type extends MediaType>(
     state => state,
   );
 
-  async function loadSource(id: string) {
+  const css = {
+    position: 'fixed',
+    top: '-9999rem',
+    left: '-9999rem',
+    width: 0,
+    height: 0,
+  };
+
+  async function loadSource(options: PlayerControlStartOptions) {
     await Api.client()
       .getPlaybackUrl({
         client,
-        id,
+        ...options,
       })
       .then(({url}) => {
-        dispatch({type: 'set-current-id', value: id});
+        dispatch({type: 'set-current-id', value: options.node_id});
+        dispatch({
+          type: 'set-current-license',
+          value: options.playback_license_id,
+        });
         dispatch({type: 'set-current-time', value: 0});
         dispatch({type: 'set-duration', value: 0});
-        // ref.current!.src = url;
+        ref.current!.src = url;
       })
       .catch(() => {
         console.log('ERROR');
@@ -229,14 +291,14 @@ export function PlayerControlProvider<Type extends MediaType>(
   }
 
   const controller: PlayController<Type> = {
-    start: (id: string) => {
-      controller.startAsync(id);
+    start(options) {
+      controller.startAsync(options);
     },
-    startAsync: async (id: string) => {
+    async startAsync(options) {
       dispatch({type: 'set-active', value: true});
-
       ref.current?.pause();
-      await loadSource(id);
+      await loadSource(options);
+      ref.current!.style.setProperty('opacity', '1');
       ref.current!.currentTime = 0;
       ref.current?.play();
     },
@@ -252,6 +314,20 @@ export function PlayerControlProvider<Type extends MediaType>(
     stop: () => {
       dispatch({type: 'set-active', value: false});
       ref.current?.pause();
+    },
+    anchor: (el: HTMLDivElement | null) => {
+      if (!el) {
+        return;
+      }
+
+      if (!el.getAttribute('id')) {
+        el.setAttribute('id', `anchor-${Date.now()}`);
+      }
+
+      dispatch({type: 'set-anchor-to', value: el.getAttribute('id')!});
+    },
+    position(pos) {
+      setPosition(pos);
     },
     ref,
     ...state,
@@ -299,10 +375,14 @@ export function PlayerControlProvider<Type extends MediaType>(
     createElement(props.mediaType, {
       key: `player-controller-${props.mediaType}`,
       style: {
-        opacity: 0,
         position: 'fixed',
-        top: '-9999px',
-        left: '-9999px',
+        top: position.top,
+        left: position.left,
+        right: position.right,
+        width: position.width,
+        height: position.height,
+        bottom: position.bottom,
+        opacity: 0,
       },
       ref,
       src: 'https://vjs.zencdn.net/v/oceans.mp4',
@@ -366,42 +446,60 @@ export function useAudioPlayControl(): AudioPlayController {
 }
 
 export type UsePlayerControlResult = {
-  start: (mediaType: MediaType, id: string) => Promise<void>;
+  start: (
+    mediaType: MediaType,
+    options: PlayerControlStartOptions,
+  ) => Promise<void>;
   active: AudioPlayController | VideoPlayController;
   audio: AudioPlayController;
   video: VideoPlayController;
-  startAudio: (id: string) => Promise<void>;
-  startVideo: (id: string) => Promise<void>;
+  startAudio: (options: PlayerControlStartOptions) => Promise<void>;
+  startVideo: (options: PlayerControlStartOptions) => Promise<void>;
+  isCurrent: (
+    mediaType: MediaType,
+    options: PlayerControlStartOptions,
+  ) => boolean;
 };
 
 export function usePlayerControl(): UsePlayerControlResult {
   const audio = useAudioPlayControl();
   const video = useVideoPlayControl();
-  async function start(mediaType: MediaType, id: string) {
+  const active = audio.active ? audio : video;
+  async function start(
+    mediaType: MediaType,
+    options: PlayerControlStartOptions,
+  ) {
     if (mediaType === MediaType.Audio) {
       if (video.active) {
         video.stop();
       }
 
-      await audio.startAsync(id);
+      await audio.startAsync(options);
     } else {
       if (audio.active) {
         audio.stop();
       }
 
-      await video.startAsync(id);
+      await video.startAsync(options);
     }
   }
 
   return {
-    async startAudio(id: string) {
-      return await start(MediaType.Audio, id);
+    async startAudio(options) {
+      return await start(MediaType.Audio, options);
     },
-    async startVideo(id: string) {
-      return await start(MediaType.Video, id);
+    async startVideo(options) {
+      return await start(MediaType.Video, options);
+    },
+    isCurrent(mediaType, options) {
+      return (
+        mediaType === active.mediaType &&
+        (options.node_id === active.currentId ||
+          options.playback_license_id === active.currentLicense)
+      );
     },
     start,
-    active: audio.active ? audio : video,
+    active,
     audio,
     video,
   };

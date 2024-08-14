@@ -4,6 +4,7 @@ import type {
   JsonObject,
   Node,
   StudioContent,
+  StudioCustomer,
   StudioNode,
 } from "@/types.ts";
 import * as feed from "@/service/feed.ts";
@@ -150,4 +151,47 @@ export async function updateForSubscription(
       subscription_id: input.subscription_id,
     });
   }
+}
+
+export type CreateLicenseInput = {
+  node: StudioNode;
+  customer?: StudioCustomer;
+};
+
+export async function createPlaybackLicenseId(
+  ctx: HandlerContextVariables,
+  input: CreateLicenseInput,
+): Promise<string> {
+  return jwt.sign(
+    {
+      m: input.node.category.substring(0, 1),
+      n: input.node.id,
+    },
+    "secret",
+    {
+      subject: input.customer?.user_id ?? "anon",
+    },
+  );
+}
+
+export type ParsedPlaybackLicenseId = {
+  mediaType: "v" | "a" | undefined;
+  node_id: string | undefined;
+  customer_id: string | undefined;
+};
+
+export async function parsePlaybackLicenseId(
+  _ctx: HandlerContextVariables,
+  id: string,
+): Promise<ParsedPlaybackLicenseId> {
+  const { sub: customer_id, m: media, n: node_id } = jwt.verify(
+    id,
+    "secret",
+  );
+
+  return await Promise.resolve({
+    mediaType: media as "v" | "a" | undefined,
+    node_id: node_id as string | undefined,
+    customer_id: customer_id as string | undefined,
+  });
 }

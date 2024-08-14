@@ -16,6 +16,8 @@ export async function handler(
     "settings",
   );
 
+  console.log("inbound webhook");
+
   const { source } = ctx.req.param() as Schema;
   const rawBody = await ctx.req.text();
   const rawHeaders = Object.create(ctx.req.raw.headers) as Record<

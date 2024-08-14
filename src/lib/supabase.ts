@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClientOptions } from "@supabase/supabase-js";
 import { assert } from "@/_deps.ts";
 
 export function getSupabaseEnv() {
@@ -17,9 +17,12 @@ export function getSupabaseEnv() {
   };
 }
 
-export function createSupabaseClient() {
+export function createSupabaseClient(
+  anonKey: string | undefined = undefined,
+  options: SupabaseClientOptions<"public"> | undefined = undefined,
+) {
   const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
-  return createClient(supabaseUrl, supabaseAnonKey);
+  return createClient(supabaseUrl, anonKey ?? supabaseAnonKey, options);
 }
 
 export function createServiceSupabaseClient() {

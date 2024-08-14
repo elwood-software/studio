@@ -1,4 +1,4 @@
-import { jwt, sql, xml } from "@/_deps.ts";
+import { jwt, sql, StudioCustomer, xml } from "@/_deps.ts";
 import type {
   HandlerContextVariables,
   JsonObject,
@@ -100,7 +100,7 @@ export async function compileRss(
 
   // it is possible that the feed is a child of a feed
   // in which case we'll need the grandparent to get the show content
-  const [show, parentFeedId] = await getFeedShow(ctx, feed);
+  const [show, parentFeedId] = await getShow(ctx, feed);
   const allItems: Array<{ id: string }> = [];
   const showHostname = getShowHostname(show);
 
@@ -252,7 +252,7 @@ export async function rssItemForEpisode(
   };
 }
 
-export async function getFeedShow(
+export async function getShow(
   ctx: HandlerContextVariables,
   feed: StudioNode,
 ): Promise<[StudioContent, string]> {
@@ -289,4 +289,48 @@ export async function getFeedShow(
     show,
     showFeedId,
   ];
+}
+
+export type GetForShowInput = {
+  show_id: string;
+  customer?: StudioCustomer;
+};
+
+export async function getForShow(
+  ctx: HandlerContextVariables,
+  input: GetForShowInput,
+): Promise<StudioNode | undefined> {
+  const db = ctx.db.elwood.query;
+  let feed: StudioNode | undefined;
+
+  if (input.customer?.id) {
+    const privateFeed = await db.selectFrom("studio_node")
+      .select("id")
+      .where("parent_id", "=", input.show_id)
+      .where("category", "=", "FEED")
+      .where("sub_category", "=", "PRIVATE")
+      .executeTakeFirstOrThrow();
+
+    // now find this customers feed
+    feed = await db.selectFrom("studio_node")
+      .selectAll()
+      .where("parent_id", "=", privateFeed.id)
+      .where("category", "=", "FEED")
+      .where("sub_category", "=", "PRIVATE")
+      .where((qb) =>
+        qb(sql<string>`metadata->>'customer_id'`, "=", input.customer.id)
+      )
+      .executeTakeFirstOrThrow();
+  }
+
+  if (!feed) {
+    feed = await db.selectFrom("studio_node")
+      .selectAll()
+      .where("parent_id", "=", input.show_id)
+      .where("category", "=", "FEED")
+      .where("sub_category", "=", "PUBLIC")
+      .executeTakeFirstOrThrow();
+  }
+
+  return feed;
 }

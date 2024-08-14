@@ -46,6 +46,7 @@
       "jsr:@std/path@0.223": "jsr:@std/path@0.223.0",
       "jsr:@std/path@1.0.0-rc.1": "jsr:@std/path@1.0.0-rc.1",
       "jsr:@std/path@^1.0.2": "jsr:@std/path@1.0.2",
+      "jsr:@std/uuid@^1.0.0": "jsr:@std/uuid@1.0.0",
       "jsr:@std/yaml": "jsr:@std/yaml@1.0.0",
       "jsr:@std/yaml@^1.0.0": "jsr:@std/yaml@1.0.0",
       "jsr:@supabase/supabase-js": "jsr:@supabase/supabase-js@2.45.0",
@@ -253,6 +254,9 @@
       },
       "@std/path@1.0.2": {
         "integrity": "a452174603f8c620bd278a380c596437a9eef50c891c64b85812f735245d9ec7"
+      },
+      "@std/uuid@1.0.0": {
+        "integrity": "32595ccd31756728c9110cb98e25000e72b8d63151b7211034ea081761ed2104"
       },
       "@std/yaml@0.224.3": {
         "integrity": "9da1ed0094f42ba24570b4d88a094b44a793ac7f2bc085c1939d3ac7e11cc0bb"
@@ -692,6 +696,7 @@
       "jsr:@std/assert@^1.0.1",
       "jsr:@std/encoding@^1.0.1",
       "jsr:@std/path@^1.0.2",
+      "jsr:@std/uuid@^1.0.0",
       "jsr:@std/yaml@^1.0.0",
       "jsr:@supabase/supabase-js@^2.44.4",
       "npm:@hono/zod-validator@^0.2.2",

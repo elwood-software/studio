@@ -140,12 +140,37 @@ export class Api {
     return episode ?? undefined;
   }
 
+  async showEpisodes(id: string): Promise<Episode[]> {
+    const {items} = await this.fetch_(`/show/${id}/episodes`, {
+      method: 'GET',
+    });
+
+    return items ?? [];
+  }
+
   async getPlaybackUrl(
     input: ApiGetPlaybackUrlInput,
   ): Promise<ApiGetPlaybackUrlResult> {
+    const id = input.playback_license_id ?? input.node_id;
     const baseUrl = process.env.NEXT_PUBLIC_STUDIO_API;
     const authHeader = (await input.client?.auth.getSession())?.data.session
       ?.access_token;
-    return {url: `${baseUrl}/play/${input.id}?token=${authHeader}`};
+    const params: Record<string, string> = {};
+    if (authHeader) {
+      params.token = authHeader;
+    }
+
+    if (input.node_id) {
+      if (input.playback_license_id) {
+        params.license = input.playback_license_id;
+      }
+      return {
+        url: `${baseUrl}/play/${input.node_id}?${new URLSearchParams(params).toString()}`,
+      };
+    }
+
+    return {
+      url: `${baseUrl}/play/${id}?${new URLSearchParams(params).toString()}`,
+    };
   }
 }

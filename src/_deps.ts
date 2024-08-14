@@ -14,6 +14,8 @@ export { stringify as stringifyYaml } from "@std/yaml/stringify";
 export { parse as parseYaml } from "@std/yaml/parse";
 export * as base64 from "@std/encoding/base64";
 export { basename, dirname, extname } from "@std/path";
+export * as uuid from "@std/uuid/v4";
+
 export {
   CompiledQuery,
   Kysely,

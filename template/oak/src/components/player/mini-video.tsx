@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
-import {useIntersection} from 'react-use';
+import {useCss, useMeasure} from 'react-use';
 
 import {ScrollTargetChange, CustomEventName} from '@/lib/events';
 import {usePlayerControl} from '@/hooks/use-player-control';
@@ -8,25 +8,25 @@ import {cn} from '@/lib/utils';
 export function MiniVideoPlayer() {
   const [show, setShow] = useState(true);
   const {video} = usePlayerControl();
-  const ref = useRef<HTMLDivElement>(null);
-  const intersection = useIntersection(ref, {
-    root: null,
-    rootMargin: '0px',
-    threshold: 1,
-  });
+  const [ref, m] = useMeasure<HTMLDivElement>();
 
   useEffect(() => {
     if (show) {
-      ['top', 'left', 'width', 'height'].forEach(style => {
-        video.ref?.current?.style.setProperty(
-          style,
-          `${intersection?.boundingClientRect[style as keyof DOMRectReadOnly]}px`,
-        );
+      video.position({
+        bottom: `0.75rem`,
+        right: `0.75rem`,
+        width: `${m.width}px`,
+        height: `${m.height}px`,
       });
     }
-  }, [intersection?.boundingClientRect]);
+  }, [show, m.width, m.height]);
 
   useEffect(() => {
+    if (!video.anchorTo) {
+      setShow(true);
+      return;
+    }
+
     function onChange(e: ScrollTargetChange) {
       setShow(e.detail[1] > 0);
     }
@@ -39,17 +39,21 @@ export function MiniVideoPlayer() {
         onChange,
       );
     };
-  }, [video.active]);
+  }, [video.active, video.anchorTo]);
 
   if (!video.active) {
     return null;
   }
 
   const cl = cn(
-    'fixed bottom-3 right-3 rounded flex items-center justify-center bg-black border-black border-4',
+    'fixed bottom-3 right-3 rounded flex items-center justify-center bg-black shadow-xl',
     {
       'opacity-0': !show,
       'opacity-100': show,
+    },
+    {
+      '--video-player-top': `0px`,
+      '--video-player-left': `0px`,
     },
   );
 

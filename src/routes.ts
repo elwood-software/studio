@@ -1,4 +1,4 @@
-import { Hono, zValidator } from "@/_deps.ts";
+import { Hono, z, zValidator } from "@/_deps.ts";
 import type { HandlerContextVariables } from "@/types.ts";
 import { isAuthenticated, isRole } from "@/lib/is-role.ts";
 import { Roles } from "@/constants.ts";
@@ -17,6 +17,8 @@ import * as viewSiteHandler from "@/handler/site/view.ts";
 import * as listEpisodesHandler from "@/handler/episode/list.ts";
 import * as viewEpisodeHandler from "@/handler/episode/view.ts";
 import * as nodePlayHandler from "@/handler/play/node.ts";
+import * as viewShowFeedHandler from "@/handler/show/episodes.ts";
+import * as viewShowHandler from "@/handler/show/view.ts";
 
 export function registerRoutes(
   app: Hono<{ Variables: HandlerContextVariables }>,
@@ -77,6 +79,19 @@ export function registerRoutes(
     "/play/:id",
     zValidator("param", nodePlayHandler.schema),
     nodePlayHandler.handler,
+  );
+
+  app.get(
+    "/show/:id",
+    zValidator("param", viewShowHandler.schema),
+    viewShowHandler.handler,
+  );
+
+  app.get(
+    "/show/:id/episodes",
+    zValidator("param", viewShowFeedHandler.schema),
+    zValidator("query", viewShowFeedHandler.querySchema),
+    viewShowFeedHandler.handler,
   );
 
   //
