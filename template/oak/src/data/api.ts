@@ -8,16 +8,18 @@ import type {
   Episode,
   ApiGetPlaybackUrlInput,
   ApiGetPlaybackUrlResult,
+  Json,
+  Show,
 } from '@/types';
 
 export type FetcherRequestInit = Omit<RequestInit, 'body'> & {
   body?: JsonObject;
 };
 
-export type Fetcher = (
+export type Fetcher = <R extends JsonObject = Json>(
   url: string,
   init: FetcherRequestInit,
-) => Promise<JsonObject>;
+) => Promise<R>;
 
 export type SubscriptionsFilter = {
   plan_id?: string;
@@ -59,6 +61,7 @@ export class Api {
       const response = await fetch(`${baseUrl}${url}`, {
         ...init,
         headers: headers_,
+        body: init.body ? JSON.stringify(init.body) : undefined,
       } as RequestInit);
       return await response.json();
     });
@@ -140,12 +143,30 @@ export class Api {
     return episode ?? undefined;
   }
 
+  async show(id: string): Promise<Show | undefined> {
+    const {show} = await this.fetch_(`/show/${id}`, {
+      method: 'GET',
+    });
+
+    return show ?? undefined;
+  }
+
   async showEpisodes(id: string): Promise<Episode[]> {
     const {items} = await this.fetch_(`/show/${id}/episodes`, {
       method: 'GET',
     });
 
     return items ?? [];
+  }
+
+  async checkSubscription(plan_id: string): Promise<Subscription> {
+    return await this.fetch_<Subscription>('/subscription/check', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: {plan_id},
+    });
   }
 
   async getPlaybackUrl(

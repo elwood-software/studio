@@ -1,6 +1,5 @@
 'use client';
 
-import {useFormState} from 'react-dom';
 import {useForm, SubmitHandler} from 'react-hook-form';
 import {useRouter} from 'next/navigation';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -105,11 +104,15 @@ export function CheckoutPage(props: CheckoutPageProps) {
               </Link>
             }>
             <div className="pt-6">
-              <PlanPrices plan={plan} onChange={onPriceChange} />
+              <PlanPrices
+                plan={plan}
+                defaultValue={price.id}
+                onChange={onPriceChange}
+              />
             </div>
           </PlanHeader>
 
-          <CardContent className="space-y-6 pt-6">
+          <CardContent className="space-y-6">
             {state?.errors && (
               <div className="text-red-400 ">
                 {state?.errors.map((error, index) => (

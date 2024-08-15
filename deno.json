@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run -A --watch --env=.env src/serve.ts"
+    "dev": "deno run -A --watch --env=.env server/serve.ts"
   },
   "imports": {
     "@/": "./src/",

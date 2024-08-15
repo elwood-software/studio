@@ -40,7 +40,7 @@ if (feed.image?.url) {
 }
 
 await Promise.all(
-  feed.entries.slice(0, 1).map(async (item, idx) => {
+  feed.entries.slice(0, 10).map(async (item, idx) => {
     const itemName = slug(item.title?.value);
     const itemPath = join(rootPath, itemName);
     const enclosure = item.attachments?.[0];
@@ -154,8 +154,6 @@ export async function generateVideo(
 
   const _o = await cmd.output();
 
-  console.log(new TextDecoder().decode(_o.stderr));
-
   await Deno.remove(tempFilePath);
 }
 
@@ -174,9 +172,7 @@ export async function generatePrivateAudio(text: string, dest: string) {
     ],
   });
 
-  const o = await cmd.output();
-
-  console.log(new TextDecoder().decode(o.stderr));
+  const _o = await cmd.output();
 
   await Deno.remove(tempFilePath);
 }

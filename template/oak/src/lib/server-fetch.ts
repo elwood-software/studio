@@ -5,7 +5,10 @@ import {createClient} from '@/utils/supabase/server';
 import type {JsonObject} from '@/types';
 import type {FetcherRequestInit} from '@/data/api';
 
-export async function serverFetch(url: string, init: FetcherRequestInit) {
+export async function serverFetch<R extends JsonObject = JsonObject>(
+  url: string,
+  init: FetcherRequestInit,
+): Promise<R> {
   const client = createClient();
   const h = headers();
   const origin = h.get('x-forwarded-host') ?? h.get('host') ?? '';
@@ -39,7 +42,9 @@ export async function serverFetch(url: string, init: FetcherRequestInit) {
   }
 
   if (!body.success && body.error?.message) {
-    throw new Error(body.error.message);
+    throw new Error(
+      `Failed to fetch ("${url}") with error "${body.error?.message}"`,
+    );
   }
 
   if (!response.ok) {
@@ -48,5 +53,5 @@ export async function serverFetch(url: string, init: FetcherRequestInit) {
     );
   }
 
-  return body as JsonObject;
+  return body as JsonObject as R;
 }

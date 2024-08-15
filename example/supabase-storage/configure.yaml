@@ -1,0 +1,20 @@
+prices:
+  - id: monthly
+    name: "10 per month"
+    amount: 1000
+    currency: usd
+    recurring: month
+  - id: annually
+    name: "per"
+    amount: 11000
+    currency: usd
+    recurring: year
+
+plans:
+  - id: awesome-subscription
+    name: "Awesome Show Plan"
+    prices:
+      - ten
+      - twenty
+    included:
+      - all

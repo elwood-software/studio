@@ -101,6 +101,12 @@ export type Site = {
   }>;
 };
 
+export type Show = {
+  id: string;
+  title: string;
+  description: string;
+};
+
 export type Episode = {
   id: string;
   title: string;

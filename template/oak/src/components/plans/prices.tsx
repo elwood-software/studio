@@ -8,6 +8,7 @@ import {Currency} from '@/components/currency';
 
 export type PlanPricesProps = {
   plan: Plan;
+  defaultValue?: string;
   onChange(id: string): void;
   className?: string;
 };
@@ -29,7 +30,9 @@ const per: Record<Plan['prices'][0]['per'], string> = {
 };
 
 export function PlanPrices(props: PlanPricesProps) {
-  const [selectedPrice, setSelectedPrice] = useState<string | null>(null);
+  const [selectedPrice, setSelectedPrice] = useState<string | null>(
+    props.defaultValue ?? null,
+  );
   const {plan} = props;
   const selectedPriceId = selectedPrice ?? plan.prices[0].id;
 

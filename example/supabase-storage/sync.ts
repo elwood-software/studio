@@ -3,6 +3,7 @@ import { join, relative } from "jsr:@std/path";
 import * as supabase from "jsr:@supabase/supabase-js";
 import { contentType } from "jsr:@std/media-types";
 import { extname } from "@std/path";
+import { existsSync } from "jsr:@std/fs";
 
 const client = supabase.createClient(
   "http://127.0.0.1:54321",
@@ -24,6 +25,15 @@ if (Deno.args.length === 0) {
 
 const __dirname = new URL(".", import.meta.url).pathname;
 const root = join(__dirname, Deno.args[0]);
+
+// see if there's a config locally
+const possibleConfig = await Array.fromAsync(
+  expandGlob("configure.*", { root: __dirname }),
+);
+
+if (possibleConfig.length > 0) {
+  await upload(possibleConfig[0]);
+}
 
 await walk(root);
 
