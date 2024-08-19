@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run -A --watch --env=.env server/serve.ts"
+    "dev": "deno run -A --watch --unstable-cron --env=.env server/serve.ts"
   },
   "imports": {
     "@/": "./src/",
@@ -28,6 +28,6 @@
   ],
   "deploy": {
     "include": [],
-    "entrypoint": "src/serve.ts"
+    "entrypoint": "server/serve.ts"
   }
 }

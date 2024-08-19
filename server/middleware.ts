@@ -1,27 +1,26 @@
 import { cors, Hono, honoJwt, type Next } from "./_deps.ts";
-import type {
-  ConnectDatabaseResult,
-  HandlerContextVariables,
-  Settings,
-} from "./types.ts";
+import type { HandlerContextVariables, Settings } from "./types.ts";
 
 import { createStripe, getStripeAccountId } from "./lib/stripe.ts";
 import * as orm from "./lib/orm.ts";
 import { instanceMiddleware } from "./lib/instance-id.ts";
+import { connectDatabase } from "./lib/connect-database.ts";
 
 export type MiddlewareOptions = {
-  db: ConnectDatabaseResult;
+  dbUrl: string;
   jwtSecret: string;
   settings: Settings;
+  platformApiUrl?: string;
+  instanceId?: string;
 };
 
 export function registerMiddleware(
   app: Hono<{ Variables: HandlerContextVariables }>,
   options: MiddlewareOptions,
 ) {
-  const { db, jwtSecret } = options;
+  const { dbUrl, jwtSecret } = options;
 
-  app.use(instanceMiddleware);
+  app.use(instanceMiddleware(options.instanceId, options.platformApiUrl));
   app.use(cors());
   app.use(
     async (ctx, next: Next) => {
@@ -35,6 +34,7 @@ export function registerMiddleware(
     },
     async (c, next: Next) => {
       const userId = c.get("jwtPayload")?.sub;
+      const db = connectDatabase(dbUrl);
 
       c.set("db", db);
       c.set(

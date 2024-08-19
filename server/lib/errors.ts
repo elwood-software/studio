@@ -22,3 +22,8 @@ export function createQueryNotFoundError(message: string): new () => Error {
     }
   };
 }
+
+export class DomainNotFoundError extends Error {
+  status = 404;
+  name = "domain_not_found";
+}
