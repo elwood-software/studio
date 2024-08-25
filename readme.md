@@ -1,8 +1,8 @@
 <p align="center">
-  <a href="https://elwood.studio"><img src="https://elwood.studio/studio-logo.png" alt="elwood studio" width="200"></a>
+  <a href="https://elwood.studio"><img src=".github/readme-assets/studio-logo.png" alt="elwood studio" width="200"></a>
 </p>
 
-> [!WARNING] Alpha
+> [!WARNING]
 >
 > Elwood Studio is currently in private alpha. We are actively developing and
 > improving the code & documentation. If you have any questions, please reach
