@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "dev": "deno run -A --watch --unstable-cron --env=.env server/serve.ts"
+    "dev-api": "deno run -A --watch --unstable-cron --env=.env apps/api/serve.ts"
   },
   "imports": {
     "@/": "./src/",
