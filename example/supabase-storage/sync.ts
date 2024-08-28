@@ -67,15 +67,18 @@ async function walk(dir: string) {
 }
 
 async function upload(entry: WalkEntry) {
-  const { data } = await client.storage.from("podcasts").createSignedUploadUrl(
-    relative(__dirname, entry.path),
-    {
-      upsert: true,
-    },
-  );
+  console.log(relative(__dirname, entry.path));
+
+  const { data, error } = await client.storage.from("podcasts")
+    .createSignedUploadUrl(
+      relative(__dirname, entry.path),
+      {
+        upsert: true,
+      },
+    );
 
   if (!data?.signedUrl) {
-    throw new Error("No signed URL");
+    throw new Error(`No signed URL: ${error?.message}`);
   }
 
   const handle = await Deno.open(entry.path, { read: true });

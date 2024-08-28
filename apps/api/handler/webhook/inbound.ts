@@ -1,7 +1,8 @@
-import type { HandlerContext, SupabaseWebhookPayload } from "../../types.ts";
-import { assert, DBConstant, extname, z } from "../../_deps.ts";
-import { getStripeWebhookSecret } from "../../lib/stripe.ts";
-import { webhook } from "../../service/mod.ts";
+import type { HandlerContext, SupabaseWebhookPayload } from "@api/types.ts";
+import { assert, DBConstant, z } from "@api/_deps.ts";
+import { getStripeWebhookSecret } from "@api/lib/stripe.ts";
+import { webhook } from "@api/service/mod.ts";
+import { canProcessFile } from "@api/service/webhook/supabase.ts";
 
 export const schema = z.object({
   source: z.enum(["stripe", "supabase-storage-sync"]),
@@ -25,7 +26,7 @@ export async function handler(
     string
   >;
 
-  let headers = rawHeaders;
+  const headers = rawHeaders;
   let reference_id: string = crypto.randomUUID();
   let body = JSON.parse(rawBody);
   let created_at = new Date();
@@ -55,23 +56,8 @@ export async function handler(
           throw new Error("Invalid bucket");
         }
 
-        // is it a file type we care about
-        if (
-          ![
-            ".jpeg",
-            ".jpg",
-            ".gif",
-            ".png",
-            ".mp4",
-            ".mp3",
-            ".m4a",
-            ".yaml",
-            ".yml",
-            ".json",
-          ]
-            .includes(extname(record.name).toLocaleLowerCase())
-        ) {
-          throw new Error("Invalid file type");
+        if (canProcessFile(record.name) === false) {
+          throw new Error("Invalid file");
         }
 
         // otherwise keep going

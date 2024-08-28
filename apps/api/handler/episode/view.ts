@@ -1,7 +1,6 @@
 import type { HandlerContext } from "../../types.ts";
 import { assert, z } from "../../_deps.ts";
-import { entitlements, feed } from "../../service/mod.ts";
-import main from "../../../actions/sync-rss-feed-entries.ts";
+import { feed } from "../../service/mod.ts";
 
 export const schema = z.object({
   "id": z.string().uuid(),

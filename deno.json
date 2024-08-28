@@ -3,7 +3,7 @@
     "dev-api": "deno run -A --watch --unstable-cron --env=.env apps/api/serve.ts"
   },
   "imports": {
-    "@/": "./src/",
+    "@api/": "./apps/api/",
     "@elwood/db": "jsr:@elwood/db@^0.0.11",
     "@elwood/run": "jsr:@elwood/run@^0.1.0",
     "@hono/zod-validator": "npm:@hono/zod-validator@^0.2.2",

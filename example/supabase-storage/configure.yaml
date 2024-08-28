@@ -1,18 +1,18 @@
 prices:
   - id: monthly
-    name: "10 per month"
+    name: "per month"
     amount: 1000
     currency: usd
     recurring: month
   - id: annually
-    name: "per"
+    name: "per year"
     amount: 11000
     currency: usd
     recurring: year
 
 plans:
-  - id: awesome-subscription
-    name: "Awesome Show Plan"
+  - id: network-subscription
+    name: "All Network Subscription"
     prices:
       - ten
       - twenty

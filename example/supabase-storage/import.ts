@@ -1,6 +1,7 @@
 import { ensureDir } from "jsr:@std/fs@1.0.1";
 import { basename, dirname, join } from "jsr:@std/path";
 import { default as slug } from "npm:slug";
+import { faker } from "npm:@faker-js/faker";
 import { stringify } from "@std/yaml";
 
 import { parseFeed } from "jsr:@mikaelporttila/rss@*";
@@ -8,7 +9,7 @@ import { parseFeed } from "jsr:@mikaelporttila/rss@*";
 const __dirname = new URL(".", import.meta.url).pathname;
 
 const feed = await parseFeed(
-  await (await fetch("https://podcastfeeds.nbcnews.com/_sWHkul5")).text(),
+  await (await fetch("https://their-side-feed.vercel.app/api/feed")).text(),
 );
 
 const rootName = slug(feed.title.value?.slice(0, 50));

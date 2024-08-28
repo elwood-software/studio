@@ -42,6 +42,21 @@ type ConfigFile = {
   }>;
 };
 
+export function canProcessFile(fileName: string): boolean {
+  return [
+    ".jpeg",
+    ".jpg",
+    ".gif",
+    ".png",
+    ".mp4",
+    ".mp3",
+    ".m4a",
+    ".yaml",
+    ".yml",
+    ".json",
+  ].includes(extname(fileName).toLocaleLowerCase());
+}
+
 /**
  * Process a Supabase Storage Sync Event
  * @param ctx

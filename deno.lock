@@ -52,6 +52,7 @@
       "jsr:@supabase/supabase-js": "jsr:@supabase/supabase-js@2.45.0",
       "jsr:@supabase/supabase-js@2": "jsr:@supabase/supabase-js@2.45.0",
       "jsr:@supabase/supabase-js@^2.44.4": "jsr:@supabase/supabase-js@2.45.0",
+      "npm:@faker-js/faker": "npm:@faker-js/faker@8.4.1",
       "npm:@hono/zod-validator": "npm:@hono/zod-validator@0.2.2_hono@4.5.2_zod@3.23.8",
       "npm:@hono/zod-validator@^0.2.2": "npm:@hono/zod-validator@0.2.2_hono@4.5.2_zod@3.23.8",
       "npm:@supabase/auth-js@2.64.4": "npm:@supabase/auth-js@2.64.4",
@@ -288,6 +289,10 @@
       }
     },
     "npm": {
+      "@faker-js/faker@8.4.1": {
+        "integrity": "sha512-XQ3cU+Q8Uqmrbf2e0cIC/QN43sTBSC8KF12u29Mb47tWrt2hAgBXSgpZMj4Ao8Uk0iJcU99QsOCaIL8934obCg==",
+        "dependencies": {}
+      },
       "@hono/zod-validator@0.2.2_hono@4.5.2_zod@3.23.8": {
         "integrity": "sha512-dSDxaPV70Py8wuIU2QNpoVEIOSzSXZ/6/B/h4xA7eOMz7+AarKTSGV8E6QwrdcCbBLkpqfJ4Q2TmBO0eP1tCBQ==",
         "dependencies": {
