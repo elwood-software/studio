@@ -21,7 +21,7 @@ export function instanceMiddleware(
     const origin = normalizeOrigin(ctx.req.header("x-origin") ?? "localhost");
 
     assert(
-      envInstanceId || platformApiUrl,
+      !!envInstanceId || !!platformApiUrl,
       "You can not set both PLATFORM_API_URL and INSTANCE_ID",
     );
 

@@ -3,7 +3,6 @@ import { join, relative } from "jsr:@std/path";
 import * as supabase from "jsr:@supabase/supabase-js";
 import { contentType } from "jsr:@std/media-types";
 import { extname } from "@std/path";
-import { existsSync } from "jsr:@std/fs";
 
 const client = supabase.createClient(
   "http://127.0.0.1:54321",
