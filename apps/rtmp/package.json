@@ -1,0 +1,15 @@
+{
+  "name": "@elwood/studio-live-distribute",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "tsx controller.ts"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "tsx": "^4.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1"
+  }
+}

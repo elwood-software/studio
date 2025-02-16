@@ -1,33 +1,11 @@
 {
+  "nodeModulesDir": "auto",
   "tasks": {
-    "dev-api": "deno run -A --watch --unstable-cron --env=.env apps/api/serve.ts"
+    "build": "deno run -A ./scripts/build.ts",
+    "up": "docker compose up",
+    "down": "docker compose down",
+    "infra": "deno run -A ./scripts/infra.ts"
   },
-  "imports": {
-    "@api/": "./apps/api/",
-    "@elwood/db": "jsr:@elwood/db@^0.0.11",
-    "@elwood/run": "jsr:@elwood/run@^0.1.0",
-    "@hono/zod-validator": "npm:@hono/zod-validator@^0.2.2",
-    "@libs/xml": "jsr:@libs/xml@^5.4.12",
-    "@mikaelporttila/rss": "jsr:@mikaelporttila/rss@^1.1.1",
-    "@std/assert": "jsr:@std/assert@^1.0.1",
-    "@std/encoding": "jsr:@std/encoding@^1.0.1",
-    "@std/path": "jsr:@std/path@^1.0.2",
-    "@std/yaml": "jsr:@std/yaml@^1.0.0",
-    "@std/uuid": "jsr:@std/uuid@^1.0.0",
-    "@supabase/supabase-js": "jsr:@supabase/supabase-js@^2.44.4",
-    "hono": "npm:hono@^4.5.2",
-    "jsonwebtoken": "npm:jsonwebtoken@^9.0.2",
-    "kysely": "npm:kysely@^0.27.4",
-    "stripe": "npm:stripe@^16.5.0",
-    "underscore": "npm:underscore@^1.13.7",
-    "zod": "npm:zod@^3.23.8"
-  },
-  "exclude": [
-    "**/node_modules",
-    "templates/**"
-  ],
-  "deploy": {
-    "include": [],
-    "entrypoint": "server/serve.ts"
-  }
+  "imports": {},
+  "exclude": ["**/node_modules", "templates/**"]
 }

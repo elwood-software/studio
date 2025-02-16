@@ -1,0 +1,27 @@
+{
+  "name": "@elwood/studio-video",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node dist/server.js",
+    "render": "tsc && node dist/render.js",
+    "install-chrome": "puppeteer browsers install chrome@131.0.6778.204"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@revideo/2d": "^0.10.3",
+    "@revideo/core": "^0.10.3",
+    "@revideo/renderer": "^0.10.3",
+    "@revideo/ui": "^0.10.3",
+    "@revideo/vite-plugin": "^0.10.3",
+    "express": "^4.21.2",
+    "puppeteer": "^24.2.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "@types/express": "^5.0.0"
+  }
+}

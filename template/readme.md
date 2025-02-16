@@ -1,1 +1,0 @@
-# Elwood Studio Templates
