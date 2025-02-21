@@ -13,11 +13,13 @@ services:
       - PRIVATE_URL=http://live:3000
       - GENERATE_API_URL=http://generate:3000
       - RTMP_API_URL=http://rtmp:3000
+      - RTMP_HOSTNAME=rtmp
       - RTMP_STREAM_PORT=1935
       - RTMP_UDP_RANGE=9000-9999
     ports:
       - '8080:3000'
     volumes:
+      - ./apps/live/fixtures:/var/fixtures
       - ./apps/live/src:/app/src
   rtmp:
     cpu_count: 1
@@ -28,6 +30,8 @@ services:
     environment:
       - PORT=3000
       - VAR_DIR=/var/studio
+      - STREAM_PORT=1935
+      - UDP_RANGE=9000-9999
     env_file:
       - .env
     ports:

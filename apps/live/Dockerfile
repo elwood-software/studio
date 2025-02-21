@@ -19,7 +19,6 @@ RUN ffmpeg -version
 RUN mkdir -p ${APOLLO_WORKSPACE_DIR} \
   && chmod 777 ${APOLLO_WORKSPACE_DIR}
 
-
 ENTRYPOINT ["/usr/local/bin/deno"]
 
 CMD ["run", "-A", "-q", "--watch", "/app/src/serve.ts"]

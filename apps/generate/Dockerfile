@@ -1,14 +1,14 @@
 
 # base
 ARG NODE_VERSION=22.7.0
-FROM node:alpine as base
+FROM node:alpine AS base
 LABEL fly_launch_runtime="NodeJS"
 WORKDIR /app
 ENV NODE_ENV=production
-ENV APOLLO_STREAMS_DIR=/data
+ENV PUPPETEER_SKIP_DOWNLOAD=1
 
 # build stage
-FROM base as build
+FROM base AS build
 COPY --link package.json .
 RUN npm install
 COPY --link src/ src/

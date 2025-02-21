@@ -1,10 +1,8 @@
 {
   "nodeModulesDir": "auto",
   "tasks": {
-    "build": "deno run -A ./scripts/build.ts",
     "up": "docker compose up",
-    "down": "docker compose down",
-    "infra": "deno run -A ./scripts/infra.ts"
+    "down": "docker compose down"
   },
   "imports": {},
   "exclude": ["**/node_modules", "templates/**"]

@@ -2,7 +2,7 @@ import { renderVideo } from "@revideo/renderer";
 
 import * as path from "node:path";
 import * as fs from "node:fs";
-import * as express from "express";
+import express from "express";
 
 const ffmpeg = process.env.FFMPEG_PATH ?? "/usr/local/bin/ffmpeg";
 const ffprobe = process.env.FFMPROBE_PATH ?? "/usr/local/bin/ffprobe";

@@ -1,3 +1,9 @@
+export { Database as Sqlite } from "@db/sqlite";
+export { DenoSqlite3Dialect } from "@soapbox/kysely-deno-sqlite";
+export { zValidator } from "@hono/zod-validator";
+export { z } from "zod";
+export { EventEmitter } from "@denosaurs/event";
+
 export {
   type Context,
   type ContextVariableMap,
@@ -9,14 +15,16 @@ export {
 export { proxy } from "hono/proxy";
 
 export { basename, dirname, extname, join } from "jsr:@std/path@^1.0.2";
-
 export { writeAll } from "jsr:@std/io@^0.224.7";
-
 export { assert } from "jsr:@std/assert@^1.0.1";
+export { stripAnsiCode } from "jsr:@std/fmt@0.225.4/colors";
+
+export { getPort } from "jsr:@openjs/port-free";
 
 export {
   CompiledQuery,
   Kysely,
+  Migrator,
   PostgresAdapter,
   PostgresDriver,
   PostgresIntrospector,
@@ -30,6 +38,8 @@ export type {
   Generated,
   Insertable,
   JSONColumnType,
+  Migration,
+  MigrationProvider,
   PostgresCursorConstructor,
   PostgresPool,
   QueryResult,
