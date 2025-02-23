@@ -1,5 +1,8 @@
 import type { ColumnType, Generated, Kysely } from "./deps.ts";
 
+export type JsonScalar = any;
+export type JsonObject = Record<string, JsonScalar>;
+
 export interface ContextVariableEnvMap {
   privateUrl: string;
   generateApiUrl: string;
@@ -14,6 +17,7 @@ export interface ContextVariableEnvMap {
 declare module "hono" {
   interface ContextVariableMap extends ContextVariableEnvMap {
     db: Database;
+    downloadPath: string;
   }
 }
 
@@ -30,9 +34,11 @@ export interface PlaylistTable {
   stream_id: string;
   has_played: boolean;
   is_playing: boolean;
-  data: {
-    src: string;
-  } & Record<string, string>;
+  data: Partial<
+    {
+      src: string;
+    } & JsonObject
+  >;
   started_at: ColumnType<Date | null>;
   ended_at: ColumnType<Date | null>;
 }

@@ -1,23 +1,42 @@
-import { isFalsy, isImage, wait } from "./utils.ts";
+import { isFalsy, isVideo, wait } from "./utils.ts";
 
 import ffmpeg from "./ffmpeg.ts";
 import { OutputLogger } from "./logger.ts";
 import { assert } from "../deps.ts";
 import type { Process, ProcessInput } from "./process.ts";
 
+export type StreamBackground = Partial<{
+  color: string;
+  textColor: string;
+  url: string;
+  thumbnail_url: string;
+  text: string;
+}>;
+
 export type StreamState = {
   nextSource: string | null;
   lastSource: string | null;
-  data: Record<string, string>;
+  data:
+    & Record<string, string>
+    & Partial<{
+      background: StreamBackground;
+    }>;
 };
 
+export type StreamLoadNextSourceFn = (
+  state: StreamState,
+) => Promise<StreamState>;
+export type StreamCreateProcessFn = (input: ProcessInput) => Process;
+export type StreamDownloadFileFn = (filePathOrUrl: string) => Promise<string>;
+
 export type StreamInput = {
-  createProcess(input: ProcessInput): Process;
-  loadNextSource(state: StreamState): Promise<StreamState>;
-  distributeUrl: string;
-  backgroundPath?: string;
-  backgroundUdpUrl?: string;
+  createProcess: StreamCreateProcessFn;
+  loadNextSource: StreamLoadNextSourceFn;
+  downloadFile: StreamDownloadFileFn;
+  distributeUrls: string[];
+  backgroundUdpUrl: string;
   contentUdpUrl: string;
+  backgroundFallback: StreamBackground;
 };
 
 export class Stream {
@@ -68,23 +87,14 @@ export class Stream {
     // 2. audio stream
 
     const opts = {
-      distributeUrl: this.input.distributeUrl,
+      distributeUrls: this.input.distributeUrls,
       contentUdpUrl: this.input.contentUdpUrl,
     };
 
-    let args: string[] = [];
-
-    if (this.input.backgroundPath && isImage(this.input.backgroundPath)) {
-      args = ffmpeg.distributeWithBackgroundImage({
-        ...opts,
-        background: this.input.backgroundPath,
-      });
-    } else if (this.input.backgroundPath || this.input.backgroundUdpUrl) {
-      args = ffmpeg.distributeWithBackgroundInput({
-        ...opts,
-        background: (this.input.backgroundPath ?? this.input.backgroundUdpUrl)!,
-      });
-    }
+    const args = ffmpeg.distributeWithBackgroundInput({
+      ...opts,
+      background: this.input.backgroundUdpUrl,
+    });
 
     assert(args.length > 0, "Unable to get streaming args from input");
 
@@ -114,13 +124,17 @@ export class Stream {
     // now that the main stream process has started
     // lets start streaming our content to it
     while (nextStreamState.nextSource !== null) {
-      const useBackground = nextStreamState.data.background;
+      const useBackground = nextStreamState.data.background_url ??
+        this.input.backgroundFallback;
 
-      // if there's a unique background start the stream
-      if (useBackground) {
-        this.streamBackground(useBackground);
-      }
+      // start the background stream. while this is await
+      // the background stream is moved to the background after the
+      // file content is loaded
+      await this.streamBackground(useBackground);
 
+      // start streaming this content
+      // this will wait until the stream finishes before
+      // fulfilling the promise
       await this.streamContent(nextStreamState.nextSource);
 
       // ask for the next source
@@ -130,14 +144,6 @@ export class Stream {
         nextSource: null,
         data: nextStreamState.data,
       });
-
-      // if there's a new background and it
-      if (
-        nextStreamState.data.background &&
-        nextStreamState.data.background !== useBackground
-      ) {
-        this.#background?.kill("SIGKILL");
-      }
     }
 
     // when we get here, we need to stop
@@ -145,32 +151,59 @@ export class Stream {
     this.stop();
   }
 
-  streamBackground(filePath: string) {
-    if (filePath && this.input.backgroundUdpUrl) {
-      try {
-        this.#background = this.input.createProcess({
-          bin: "ffmpeg",
-          args: ffmpeg.streamFileToUdp(
-            {
-              udpUrl: this.input.backgroundUdpUrl,
-              filePath,
-            },
-            ["-an", "-c:v", "copy"],
-            ["-stream_loop", "-1"],
-          ),
-        });
+  async streamBackground(filePathOrUrl: string) {
+    assert(
+      filePathOrUrl,
+      "No filePathOrUrl provided to Stream.streamBackground()",
+    );
 
-        this.#background.spawn(true);
-      } catch (err) {
-        console.log(
-          "Error starting background stream:",
-          (err as Error).message,
-        );
-      }
+    console.log(`streamBackground(${filePathOrUrl})`);
+    const filePath = await this.input.downloadFile(filePathOrUrl);
+
+    // stop a stream if one is going
+    if (this.#background) {
+      this.#background.kill("SIGKILL");
+    }
+
+    try {
+      const beforeOutputs = isVideo(filePathOrUrl)
+        ? ["-stream_loop", "-1"]
+        : ["-loop", "1"];
+
+      beforeOutputs.push(
+        "-vf",
+        "drawtext=text='Hello, World!':fontsize=48:fontcolor=white:x=100:y=100",
+      );
+
+      this.#background = this.input.createProcess({
+        bin: "ffmpeg",
+        args: ffmpeg.streamFileToUdp(
+          {
+            udpUrl: this.input.backgroundUdpUrl,
+            filePath,
+          },
+          ["-an", "-c:v", "copy"],
+          beforeOutputs,
+        ),
+      });
+
+      this.#background.spawn(true);
+    } catch (err) {
+      console.log(
+        "Error starting background stream:",
+        (err as Error).message,
+      );
     }
   }
 
-  async streamContent(filePath: string) {
+  async streamContent(filePathOrUrl: string) {
+    assert(
+      filePathOrUrl,
+      "No filePathOrUrl provided to Stream.streamContent()",
+    );
+
+    const filePath = await this.input.downloadFile(filePathOrUrl);
+
     try {
       this.#content = this.input.createProcess({
         bin: "ffmpeg",
@@ -182,7 +215,13 @@ export class Stream {
 
       this.#content.spawn();
 
-      await this.#content.status();
+      const { code } = await this.#content.status();
+
+      // if the code is good, lets cleanup the cache file
+      // since we don't need it anymore
+      if (code === 0) {
+        await Deno.remove(filePath);
+      }
     } catch (err) {
       console.log("Error starting content stream:", (err as Error).message);
     }

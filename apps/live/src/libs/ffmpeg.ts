@@ -1,22 +1,13 @@
 export type DistributeOptions = {
   background: string;
   contentUdpUrl: string;
-  distributeUrl: string;
+  distributeUrls: string[];
 };
 
 export type StreamFileToUdpOptions = {
   udpUrl: string;
   filePath: string;
 };
-
-export function distributeWithBackgroundImage(options: DistributeOptions) {
-  return distributeWithArgs(options, [
-    "-loop",
-    "1",
-    "-i",
-    options.background,
-  ]);
-}
 
 export function distributeWithBackgroundInput(
   options: DistributeOptions,
@@ -60,7 +51,7 @@ export function distributeWithArgs(
     "-shortest",
     "-f",
     "flv",
-    options.distributeUrl,
+    ...options.distributeUrls,
   ];
 }
 
@@ -84,9 +75,35 @@ export function streamFileToUdp(
   ];
 }
 
+export type StreamWithImageToUdpOptions = StreamFileToUdpOptions & {
+  text: string;
+  backgroundColor: string;
+};
+
+export function streamWithImageToUdp(options: StreamWithImageToUdpOptions) {
+  return [
+    "-hide_banner",
+    "-loglevel",
+    "info",
+    "-f",
+    "lavfi",
+    "-i",
+    `color=c=${options.backgroundColor}:s=1920x1080`,
+    "-i",
+    options.filePath,
+    "-filter_complex",
+    [
+      "[0:v][1:v] overlay=200:150",
+      `drawtext=text='Hello, World!':fontsize=48:fontcolor=white:x=400:y=500`,
+    ].join(","),
+    "-f",
+    "mpegts",
+    options.udpUrl,
+  ];
+}
+
 export default {
   streamFileToUdp,
   distributeWithArgs,
-  distributeWithBackgroundImage,
   distributeWithBackgroundInput,
 };

@@ -1,5 +1,9 @@
 import { extname } from "../deps.ts";
 
+export function isHttpUrl(val: string): boolean {
+  return val.startsWith("http:") || val.startsWith("https:");
+}
+
 export function isFalsy(value: unknown): boolean {
   return value === undefined || value === null || value === false;
 }

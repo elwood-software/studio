@@ -19,6 +19,7 @@ services:
     ports:
       - '8080:3000'
     volumes:
+      - ./tmp:/var/studio
       - ./apps/live/fixtures:/var/fixtures
       - ./apps/live/src:/app/src
   rtmp:

@@ -13,8 +13,6 @@ let currentConnection: Database | null = null;
 
 export async function connect(path: string): Promise<Database> {
   if (!currentConnection) {
-    console.log(path);
-
     currentConnection = new Kysely<DatabaseTables>({
       dialect: new DenoSqlite3Dialect({
         database: new Sqlite(path),
@@ -26,7 +24,7 @@ export async function connect(path: string): Promise<Database> {
       provider: new LocalMigrationProvider(),
     });
 
-    console.log(await migrator.migrateToLatest());
+    await migrator.migrateToLatest();
   }
 
   return currentConnection;
@@ -49,7 +47,7 @@ class LocalMigrationProvider implements MigrationProvider {
             .addColumn("has_played", "integer")
             .addColumn("is_playing", "integer")
             .addColumn("process_id", "integer")
-            .addColumn("data", "text")
+            .addColumn("data", "json")
             .addColumn("started_at", "text")
             .addColumn("ended_at", "text")
             .execute();

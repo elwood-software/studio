@@ -10,9 +10,9 @@ export async function registerRoutes(app: Hono) {
     return c.redirect("https://elwood.studio/live", 302);
   });
 
-  app.post("/start", ...startRoute.validators, startRoute.handler);
-  app.delete("/stop/:by/:value", ...stopRoute.validators, stopRoute.handler);
-  app.get("/status/:by/:value", ...statusRoute.validators, statusRoute.handler);
+  app.post("/stream", ...startRoute.validators, startRoute.handler);
+  app.delete("/stream/:id", ...stopRoute.validators, stopRoute.handler);
+  app.get("/stream/:id", ...statusRoute.validators, statusRoute.handler);
 
   app.all("/generate/:path", (c) => {
     return proxy(`${c.var.generateApiUrl}/${c.req.param("path")}`);

@@ -14,10 +14,18 @@ export {
 } from "hono";
 export { proxy } from "hono/proxy";
 
-export { basename, dirname, extname, join } from "jsr:@std/path@^1.0.2";
+export {
+  basename,
+  dirname,
+  extname,
+  join,
+  toFileUrl,
+} from "jsr:@std/path@^1.0.2";
 export { writeAll } from "jsr:@std/io@^0.224.7";
 export { assert } from "jsr:@std/assert@^1.0.1";
 export { stripAnsiCode } from "jsr:@std/fmt@0.225.4/colors";
+export { exists } from "jsr:@std/fs/exists";
+export { encodeHex } from "jsr:@std/encoding/hex";
 
 export { getPort } from "jsr:@openjs/port-free";
 

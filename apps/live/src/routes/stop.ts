@@ -1,13 +1,10 @@
-import { Context, getPort, z, zValidator } from "../deps.ts";
-import { base64UrlEncode } from "../libs/utils.ts";
+import { Context, z, zValidator } from "../deps.ts";
 
-import { Stream } from "../libs/stream.ts";
 import state from "../libs/state.ts";
 
 export const schema = {
   param: z.object({
-    by: z.enum(["id", "stream"]),
-    value: z.string().uuid(),
+    id: z.string().uuid(),
   }),
 };
 
@@ -18,11 +15,10 @@ export const validators = [
   ),
 ];
 
-export async function handler(c: Context) {
-  const { by, value } = c.req.param() as z.infer<typeof schema.param>;
-  const db = c.get("db");
+export function handler(c: Context) {
+  const { id } = c.req.param() as z.infer<typeof schema.param>;
 
-  state.get(value)!.stop();
+  state.get(id)!.stop();
 
   return c.json({
     ok: true,

@@ -1,4 +1,4 @@
-import { type Hono } from "../deps.ts";
+import { assert, type Hono, join } from "../deps.ts";
 import { type ContextVariableEnvMap } from "../types.ts";
 
 import * as db from "./database.ts";
@@ -16,6 +16,12 @@ export async function registerMiddleware(app: Hono) {
     databasePath: Deno.env.get("DATABASE_PATH") ?? ":memory:",
   };
 
+  assert(envToVar.varDir, "No VAR_DIR set");
+
+  const downloadPath = join(String(envToVar.varDir!), "download");
+
+  await Deno.mkdir(downloadPath, { recursive: true });
+
   const connection = await db.connect(String(envToVar.databasePath));
 
   app.use(async (c, next) => {
@@ -24,6 +30,7 @@ export async function registerMiddleware(app: Hono) {
     });
 
     c.set("db", connection);
+    c.set("downloadPath", downloadPath);
 
     await next();
   });

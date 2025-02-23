@@ -23,7 +23,9 @@ const scene = makeScene2D('scene', function* (view) {
         position={[0, -100]}
       />
       <Audio
-        src={'https://revideo-example-assets.s3.amazonaws.com/chill-beat.mp3'}
+        src={
+          'https://elwood-studio-us-west-1.s3.us-west-1.amazonaws.com/public/empty.mov'
+        }
         play={true}
         time={17.0}
       />

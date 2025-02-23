@@ -80,11 +80,13 @@ export class Process extends EventEmitter<ProcessEvents> {
     assert(this.#child, "Child has not been spawned");
     this.#result = await this.#child.status;
     this.emit("result", this.#result);
+    await this.#logger.close();
     return this.#result;
   }
 
   kill(sig: Deno.Signal) {
     this.#child?.kill(sig);
+    this.#logger.close();
     this.emit("kill", sig);
   }
 }

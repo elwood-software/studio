@@ -1,8 +1,9 @@
-import { ChildProcess } from "node:child_process";
 import { stripAnsiCode } from "../deps.ts";
 
+export type LogEntry = { timestamp: string; text: string };
+
 export class Logger extends WritableStream {
-  #logs: Array<{ timestamp: string; text: string }> = [];
+  #logs: LogEntry[] = [];
 
   #writeToConsole = false;
 
@@ -39,17 +40,31 @@ export class OutputLogger {
   stdout = new Logger();
   stderr = new Logger();
 
+  constructor(readonly prefix: string = "") {
+  }
+
   set writeToConsole(val: boolean) {
     this.stderr.writeToConsole = val;
     this.stdout.writeToConsole = val;
   }
 
-  get logs() {
+  get combinedLogs() {
     return [
       ...this.stdout.logs,
       ...this.stderr.logs,
     ];
   }
+
+  get combinedFormattedLogs() {
+    return [
+      ...this.stdout.logs.map(this.#format),
+      ...this.stderr.logs.map(this.#format),
+    ];
+  }
+
+  #format = (item: LogEntry) => {
+    return `[${this.prefix}:stdout] (${item.timestamp}) ${item.text}`;
+  };
 
   attach(child: Deno.ChildProcess) {
     if (child.stdout) {
