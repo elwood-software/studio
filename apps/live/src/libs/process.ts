@@ -4,6 +4,7 @@ import { OutputLogger } from "./logger.ts";
 
 export type ProcessInput = Deno.CommandOptions & {
   bin: string;
+  loggerPrefix?: string;
 };
 
 export type ProcessEvents = {
@@ -17,13 +18,15 @@ export type ProcessEvents = {
 export class Process extends EventEmitter<ProcessEvents> {
   #command: Deno.Command;
   #child: Deno.ChildProcess | null = null;
-  #logger = new OutputLogger();
+  #logger: OutputLogger;
   #result: Deno.CommandStatus | null = null;
 
   constructor(readonly input: ProcessInput) {
     super();
 
-    const { bin, ...opts } = input;
+    const { bin, loggerPrefix, ...opts } = input;
+
+    this.#logger = new OutputLogger(loggerPrefix);
 
     this.#command = new Deno.Command(bin, {
       ...opts,
@@ -84,10 +87,11 @@ export class Process extends EventEmitter<ProcessEvents> {
     return this.#result;
   }
 
-  kill(sig: Deno.Signal) {
+  async kill(sig: Deno.Signal) {
     this.#child?.kill(sig);
-    this.#logger.close();
     this.emit("kill", sig);
+    // wait for the child status to make sure it's closed
+    await this.status();
   }
 }
 

@@ -1,4 +1,4 @@
-import { extname } from "../deps.ts";
+import { checkPort, extname } from "../deps.ts";
 
 export function isHttpUrl(val: string): boolean {
   return val.startsWith("http:") || val.startsWith("https:");
@@ -33,4 +33,13 @@ export function base64UrlEncode(data: Record<string, unknown>): string {
     /\//g,
     "_",
   ).replace(/=+$/, "");
+}
+
+export async function waitForPortToClose(
+  port: number,
+  interval = 1000 * 5,
+) {
+  while (await checkPort(port) === false) {
+    await wait(interval);
+  }
 }

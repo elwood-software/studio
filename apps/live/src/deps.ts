@@ -27,7 +27,7 @@ export { stripAnsiCode } from "jsr:@std/fmt@0.225.4/colors";
 export { exists } from "jsr:@std/fs/exists";
 export { encodeHex } from "jsr:@std/encoding/hex";
 
-export { getPort } from "jsr:@openjs/port-free";
+export { checkPort, getPort } from "jsr:@openjs/port-free";
 
 export {
   CompiledQuery,

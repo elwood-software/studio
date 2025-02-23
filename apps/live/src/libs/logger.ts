@@ -1,3 +1,4 @@
+import { Log } from "kysely";
 import { stripAnsiCode } from "../deps.ts";
 
 export type LogEntry = { timestamp: string; text: string };
@@ -7,7 +8,7 @@ export class Logger extends WritableStream {
 
   #writeToConsole = false;
 
-  constructor() {
+  constructor(readonly prefix: string = "") {
     super({
       write: (chunk: BufferSource) => {
         this._write(chunk);
@@ -22,7 +23,7 @@ export class Logger extends WritableStream {
   private _write(chunk: BufferSource) {
     const text = stripAnsiCode(new TextDecoder().decode(chunk));
     if (this.#writeToConsole === true) {
-      console.log(text);
+      console.log(`[${this.prefix}] ${text}`);
     }
 
     this.#logs.push({
@@ -37,10 +38,12 @@ export class Logger extends WritableStream {
 }
 
 export class OutputLogger {
-  stdout = new Logger();
-  stderr = new Logger();
+  stdout: Logger;
+  stderr: Logger;
 
   constructor(readonly prefix: string = "") {
+    this.stdout = new Logger(prefix);
+    this.stderr = new Logger(prefix);
   }
 
   set writeToConsole(val: boolean) {
@@ -77,12 +80,14 @@ export class OutputLogger {
   }
 
   async close() {
-    this.stdout.getWriter().releaseLock();
-    this.stderr.getWriter().releaseLock();
+    try {
+      this.stdout.getWriter().releaseLock();
+      this.stderr.getWriter().releaseLock();
 
-    await Promise.all([
-      () => this.stdout.close(),
-      () => this.stderr.close(),
-    ]);
+      await Promise.all([
+        () => this.stdout.close(),
+        () => this.stderr.close(),
+      ]);
+    } catch (_) {}
   }
 }

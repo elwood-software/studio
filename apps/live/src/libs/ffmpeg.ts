@@ -24,14 +24,25 @@ export function distributeWithArgs(
   args: string[],
 ): string[] {
   return [
-    "-hide_banner",
-    "-loglevel",
-    "info",
+    // "-hide_banner",
+    // "-loglevel",
+    // "info",
     "-y",
+    "-fflags",
+    "+genpts",
+    // "-avioflags",
+    // "direct",
+    // "-reorder_queue_size",
+    // "10000",
+    // "-analyzeduration",
+    // "10000000",
+    // "-probesize",
+    // "10000000",
     ...args,
-    "-re",
     "-i",
     options.contentUdpUrl,
+    "-fflags",
+    "+genpts",
     "-filter_complex",
     "[1:a]showwaves=s=1920x300:colors=0xffffff:mode=line:draw=full,format=rgba[v];[0:v][v]overlay=0:780[outv]",
     "-map",
@@ -51,6 +62,8 @@ export function distributeWithArgs(
     "-shortest",
     "-f",
     "flv",
+    // "-f",
+    // "mpegts",
     ...options.distributeUrls,
   ];
 }
@@ -61,9 +74,9 @@ export function streamFileToUdp(
   beforeInput: string[] = [],
 ): string[] {
   return [
-    "-hide_banner",
-    "-loglevel",
-    "info",
+    // "-hide_banner",
+    // "-loglevel",
+    // "info",
     ...beforeInput,
     "-re",
     "-i",
@@ -75,12 +88,16 @@ export function streamFileToUdp(
   ];
 }
 
-export type StreamWithImageToUdpOptions = StreamFileToUdpOptions & {
-  text: string;
-  backgroundColor: string;
-};
+export type StreamWithGeneratedBackgroundToUdpOptions =
+  & Omit<StreamFileToUdpOptions, "filePath">
+  & {
+    text: string;
+    backgroundColor: string;
+  };
 
-export function streamWithImageToUdp(options: StreamWithImageToUdpOptions) {
+export function streamWithGeneratedBackgroundToUdp(
+  options: StreamWithGeneratedBackgroundToUdpOptions,
+) {
   return [
     "-hide_banner",
     "-loglevel",
@@ -89,12 +106,11 @@ export function streamWithImageToUdp(options: StreamWithImageToUdpOptions) {
     "lavfi",
     "-i",
     `color=c=${options.backgroundColor}:s=1920x1080`,
-    "-i",
-    options.filePath,
+    // "-i",
+    // options.filePath,
     "-filter_complex",
     [
-      "[0:v][1:v] overlay=200:150",
-      `drawtext=text='Hello, World!':fontsize=48:fontcolor=white:x=400:y=500`,
+      `drawtext=text='${options.text}':fontsize=48:fontcolor=white:x=400:y=500`,
     ].join(","),
     "-f",
     "mpegts",
@@ -106,4 +122,5 @@ export default {
   streamFileToUdp,
   distributeWithArgs,
   distributeWithBackgroundInput,
+  streamWithGeneratedBackgroundToUdp,
 };
