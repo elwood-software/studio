@@ -1,0 +1,44 @@
+{
+  "name": "@elwood/studio-db",
+  "version": "0.4.0",
+  "type": "module",
+  "description": "",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "import": "./dist/index.d.ts",
+      "require": "./dist/index.d.cts",
+      "default": "./dist/index.d.ts"
+    }
+  },
+  "typings": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "src/"
+  ],
+  "bin": "./bin/migrate.ts",
+  "scripts": {
+    "build": "tsup",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "kysely": "^0.27.5"
+  },
+  "devDependencies": {
+    "@elwood/eslint-config": "*",
+    "@elwood/types": "workspace:*",
+    "@elwood/typescript-config": "*",
+    "@types/pg": "^8.11.11",
+    "dotenv": "^16.4.7",
+    "pg": "^8.14.0",
+    "tsup": "^8.4.0"
+  }
+}

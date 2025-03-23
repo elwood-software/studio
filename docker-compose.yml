@@ -1,27 +1,40 @@
 services:
-  live:
+  # api:
+  #   cpu_count: 1
+  #   mem_limit: 2gb
+  #   build:
+  #     context: ./
+  #     dockerfile: ./packages/api/Dockerfile
+  #   environment:
+  #     - PORT=3000
+  #     - DATABASE_URL=postgresql://host.docker.internal:postgres@127.0.0.1:54322/postgres
+  #   ports:
+  #     - '8080:3000'
+
+  stream:
     cpu_count: 1
     mem_limit: 2gb
     build:
-      context: ./apps/live
+      context: ./apps/stream
       dockerfile: ./Dockerfile
     env_file:
       - .env
     environment:
       - PORT=3000
       - VAR_DIR=/var/studio
-      - PRIVATE_URL=http://live:3000
+      - PRIVATE_URL=http://stream:3000
       - GENERATE_API_URL=http://generate:3000
       - RTMP_API_URL=http://rtmp:3000
       - RTMP_HOSTNAME=rtmp
       - RTMP_STREAM_PORT=1935
       - RTMP_UDP_RANGE=9000-9999
+      - API_CALLBACK_URL=http://host.docker.internal:3000/live.callback
     ports:
-      - '8080:3000'
+      - '8081:3000'
     volumes:
       - ./tmp:/var/studio
-      - ./apps/live/fixtures:/var/fixtures
-      - ./apps/live/src:/app/src
+      - ./apps/stream/fixtures:/var/fixtures
+      - ./apps/stream/src:/app/src
   rtmp:
     cpu_count: 1
     mem_limit: 2gb
@@ -37,22 +50,22 @@ services:
       - .env
     ports:
       - '1935:1935'
-      - '8081:3000'
+      - '8082:3000'
       - '9000-9999:9000-9999/udp'
     volumes:
       - ./apps/rtmp/src/controller.ts:/app/controller.ts  
-  generate:
-    build:
-      context: ./apps/generate
-      dockerfile: ./Dockerfile
-    env_file:
-      - .env
-    ports:
-      - '8082:3000'
-    environment:
-      - PORT=3000
-      - VAR_DIR=/var/studio
-    volumes:
-      - ./apps/generate/src:/app/src
-      - ./tmp/:/var/studio
+  # generate:
+  #   build:
+  #     context: ./apps/generate
+  #     dockerfile: ./Dockerfile
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - '8083:3000'
+  #   environment:
+  #     - PORT=3000
+  #     - VAR_DIR=/var/studio
+  #   volumes:
+  #     - ./apps/generate/src:/app/src
+  #     - ./tmp/:/var/studio
     

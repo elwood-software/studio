@@ -1,6 +1,6 @@
 {
   "deno.enable": true,
-  "deno.enablePaths": ["./apps/live", "./scripts"],
+  "deno.enablePaths": ["./apps/stream", "./apps/api", "./scripts"],
   "deno.lint": true,
   "eslint.workingDirectories": [
     {
